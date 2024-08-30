@@ -181,7 +181,7 @@ with col[0]:
     st.pyplot(fig3)
     
     # 4. Create a consumer distribution map for E-Commerce
-    geojson_url = "https://github.com/codeforgermany/click_that_hood/blob/48ba05ad4c6969e3b3c25735492169227ae411f1/public/data/brazil-states.geojson"
+    geojson_url = "https://gist.github.com/1ccaaab05ea113b0dff3b22be3b4d637.git"
 
     def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_url):
         # Ambil data GeoJSON dari URL
