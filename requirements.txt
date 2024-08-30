@@ -4,3 +4,4 @@ seaborn
 streamlit
 altair
 plotly
+requests
