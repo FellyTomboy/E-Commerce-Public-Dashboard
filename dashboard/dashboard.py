@@ -186,8 +186,16 @@ with col[0]:
     def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_url):
         # Ambil data GeoJSON dari URL
         response = requests.get(geojson_url)
-        geojson_data = response.json()
+            # Cek status respons
+        if response.status_code != 200:
+            st.error(f"Failed to retrieve data: HTTP {response.status_code}")
+            return
         
+        try:
+            geojson_data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            st.error("Failed to decode JSON from the response")
+            return
         # Lanjutkan dengan kode yang ada
         state_counts['state_name'] = state_counts['customer_state'].map(
             {feature['properties']['id']: feature['properties']['name'] for feature in geojson_data['features']}
