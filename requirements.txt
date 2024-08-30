@@ -5,3 +5,4 @@ streamlit
 altair
 plotly
 requests
+path.py
