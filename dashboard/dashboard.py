@@ -5,7 +5,6 @@ import streamlit as st
 import altair as alt
 import plotly.express as px
 from pathlib import Path
-import requests
 import json
 
 # Streamlit Configuration
@@ -181,26 +180,14 @@ with col[0]:
     st.pyplot(fig3)
     
     # 4. Create a consumer distribution map for E-Commerce
-    geojson_url = "https://gist.github.com/1ccaaab05ea113b0dff3b22be3b4d637.git"
+    def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_file):
 
-    def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_url):
-        # Ambil data GeoJSON dari URL
-        response = requests.get(geojson_url)
-            # Cek status respons
-        if response.status_code != 200:
-            st.error(f"Failed to retrieve data: HTTP {response.status_code}")
-            return
-        
-        try:
-            geojson_data = response.json()
-        except requests.exceptions.JSONDecodeError:
-            st.error("Failed to decode JSON from the response")
-            return
-        # Lanjutkan dengan kode yang ada
+        with open(geojson_file) as f:
+            geojson_data = json.load(f)
+            
         state_counts['state_name'] = state_counts['customer_state'].map(
-            {feature['properties']['id']: feature['properties']['name'] for feature in geojson_data['features']}
-        )
-        
+        {feature['properties']['id']: feature['properties']['name'] for feature in geojson_data['features']}
+    )
         choropleth = px.choropleth(
             dataset_name,
             geojson=geojson_data,
@@ -235,7 +222,7 @@ with col[0]:
     
     unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
     state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
-    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', geojson_url)
+    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', 'br.json')
     st.markdown('#### Consumer Distribution Map')
     st.plotly_chart(choropleth_map)
 
