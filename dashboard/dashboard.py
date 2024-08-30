@@ -180,14 +180,18 @@ with col[0]:
     st.pyplot(fig3)
     
     # 4. Create a consumer distribution map for E-Commerce
-    def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_file):
+    geojson_url = "https://github.com/codeforgermany/click_that_hood/blob/48ba05ad4c6969e3b3c25735492169227ae411f1/public/data/brazil-states.geojson"
 
-        with open(geojson_file) as f:
-            geojson_data = json.load(f)
-            
+    def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_url):
+        # Ambil data GeoJSON dari URL
+        response = requests.get(geojson_url)
+        geojson_data = response.json()
+        
+        # Lanjutkan dengan kode yang ada
         state_counts['state_name'] = state_counts['customer_state'].map(
-        {feature['properties']['id']: feature['properties']['name'] for feature in geojson_data['features']}
-    )
+            {feature['properties']['id']: feature['properties']['name'] for feature in geojson_data['features']}
+        )
+        
         choropleth = px.choropleth(
             dataset_name,
             geojson=geojson_data,
@@ -222,7 +226,7 @@ with col[0]:
     
     unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
     state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
-    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', 'br.json')
+    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', geojson_url)
     st.markdown('#### Consumer Distribution Map')
     st.plotly_chart(choropleth_map)
 
