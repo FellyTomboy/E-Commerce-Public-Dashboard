@@ -5,7 +5,6 @@ import streamlit as st
 import altair as alt
 import plotly.express as px
 from pathlib import Path
-import path
 import json
 
 # Streamlit Configuration
@@ -181,61 +180,51 @@ with col[0]:
     st.pyplot(fig3)
     
     # 4. Create a consumer distribution map for E-Commerce
-    import json
-import path
-import os
+    def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_file):
 
-def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_file):
-
-    # Menentukan path absolut dari file geojson
-    base_dir = path.Path(__file__).abspath().parent
-    geojson_path = base_dir / geojson_file
-
-    with open(geojson_path) as f:
-        geojson_data = json.load(f)
-        
-    state_counts['state_name'] = state_counts['customer_state'].map(
+        with open(geojson_file) as f:
+            geojson_data = json.load(f)
+            
+        state_counts['state_name'] = state_counts['customer_state'].map(
         {feature['properties']['id']: feature['properties']['name'] for feature in geojson_data['features']}
     )
-    choropleth = px.choropleth(
-        dataset_name,
-        geojson=geojson_data,
-        locations=state_id,
-        featureidkey="properties.id",
-        color=count_column,
-        color_continuous_scale=color_theme,
-        range_color=(0, dataset_name[count_column].max()), 
-        labels={count_column: 'Customers'},
-        hover_name="state_name"
-    )
-    choropleth.update_layout(
-        geo=dict(
-            scope='south america',
-            center={"lat": -14.2350, "lon": -51.9253},
-            projection_scale=2,
-            showland=True,
-            landcolor='black',
-            oceancolor='black',
-            bgcolor='black',
-            countrycolor='black',
-            subunitcolor='black'
-        ),
-        paper_bgcolor='black',
-        plot_bgcolor='black',
-        template='plotly_dark',
-        margin=dict(l=0, r=0, t=0, b=0),
-        height=500,
-        width=500
-    )
-    return choropleth
-
-unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
-state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
-geojson_file = 'br.json'
-choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', geojson_file)
-st.markdown('#### Consumer Distribution Map')
-st.plotly_chart(choropleth_map)
-
+        choropleth = px.choropleth(
+            dataset_name,
+            geojson=geojson_data,
+            locations=state_id,
+            featureidkey="properties.id",
+            color=count_column,
+            color_continuous_scale=color_theme,
+            range_color=(0, dataset_name[count_column].max()), 
+            labels={count_column: 'Customers'},
+            hover_name="state_name"
+        )
+        choropleth.update_layout(
+            geo=dict(
+                scope='south america',
+                center={"lat": -14.2350, "lon": -51.9253},
+                projection_scale=2,
+                showland=True,
+                landcolor='black',
+                oceancolor='black',
+                bgcolor='black',
+                countrycolor='black',
+                subunitcolor='black'
+            ),
+            paper_bgcolor='black',
+            plot_bgcolor='black',
+            template='plotly_dark',
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=500,
+            width=500
+        )
+        return choropleth
+    
+    unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
+    state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
+    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', 'br.json')
+    st.markdown('#### Consumer Distribution Map')
+    st.plotly_chart(choropleth_map)
 
 with col[1]:
     
