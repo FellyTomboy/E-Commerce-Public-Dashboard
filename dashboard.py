@@ -28,10 +28,10 @@ def load_data():
     customer_dataset_path = base_dir / "data" / "customers_dataset.csv"
 
     # Read the CSV file using the relative path
-    order_dataset = pd.read_csv(orders_dataset_path, delimiter=",")
-    products_dataset = pd.read_csv(products_dataset_path, delimiter=",")
-    order_items_dataset = pd.read_csv(order_items_dataset_path, delimiter=",")
-    customer_dataset = pd.read_csv(customer_dataset_path, delimiter=",")
+    order_dataset = pd.read_csv("data/orders_dataset.csv", delimiter=",")
+    products_dataset = pd.read_csv("data/products_dataset.csv", delimiter=",")
+    order_items_dataset = pd.read_csv("data/order_items_dataset.csv", delimiter=",")
+    customer_dataset = pd.read_csv("data/customers_dataset.csv", delimiter=",")
 
     # Merge datasets
     merged = pd.merge(
