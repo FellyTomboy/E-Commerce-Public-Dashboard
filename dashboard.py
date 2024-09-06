@@ -161,7 +161,7 @@ with col[0]:
     # Display chart
     st.markdown('#### Items Sold Per Categories')
     # Daftar warna yang disediakan
-    colors = ['#8bc091', '#71b490', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
+    colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
     # Fungsi untuk menyesuaikan warna dengan jumlah kategori
     def adjust_colors(colors, num_categories):
         return colors[:num_categories] + [colors[-1]] * (num_categories - len(colors))
