@@ -160,7 +160,14 @@ with col[0]:
 
     # Display chart
     st.markdown('#### Items Sold Per Categories')
-    st.bar_chart(chart_data, color=['#691f55', '#b81656', '#ed503e', '#f5a47b'])
+    # Daftar warna yang disediakan
+    colors = ['#221330', '#441b46', '#691f55', '#911c5b', '#b81656', '#d92747', '#ed503e', '#f37d56', '#f5a47b', '#f6c8aa']
+    # Fungsi untuk menyesuaikan warna dengan jumlah kategori
+    def adjust_colors(colors, num_categories):
+        return colors[:num_categories] + [colors[-1]] * (num_categories - len(colors))
+    # Menyaring warna yang sesuai
+    color_map = adjust_colors(colors, len(category))
+    st.bar_chart(chart_data, color=color_map)
     
     # 4. Create a consumer distribution map for E-Commerce
     def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_file):
