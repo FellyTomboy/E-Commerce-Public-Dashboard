@@ -19,7 +19,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     # Define the base directory based on the location of this Python file
-    base_dir = Path(__file__).resolve().parent.parent
+    base_dir = Path(__file__).resolve()
 
     # Create relative paths for each dataset file
     orders_dataset_path = base_dir / "data" / "orders_dataset.csv"
