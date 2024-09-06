@@ -160,7 +160,7 @@ with col[0]:
 
     # Display chart
     st.markdown('#### Items Sold Per Categories')
-    st.bar_chart(chart_data)
+    st.bar_chart(chart_data, color=['#221330', '#441b46', '#691f55', '#911c5b', '#b81656', '#d92747', '#ed503e', '#f37d56', '#f5a47b', '#f6c8aa'])
     
     # 4. Create a consumer distribution map for E-Commerce
     def make_choropleth(dataset_name, state_id, count_column, color_theme, geojson_file):
