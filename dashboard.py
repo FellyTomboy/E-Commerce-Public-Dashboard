@@ -18,15 +18,6 @@ st.set_page_config(
 # Ekstrak data for CSV files
 @st.cache_data
 def load_data():
-    # Define the base directory based on the location of this Python file
-    base_dir = Path(__file__).resolve()
-
-    # Create relative paths for each dataset file
-    orders_dataset_path = base_dir / "data" / "orders_dataset.csv"
-    products_dataset_path = base_dir / "data" / "products_dataset.csv"
-    order_items_dataset_path = base_dir / "data" / "order_items_dataset.csv"
-    customer_dataset_path = base_dir / "data" / "customers_dataset.csv"
-
     # Read the CSV file using the relative path
     order_dataset = pd.read_csv("data/orders_dataset.csv", delimiter=",")
     products_dataset = pd.read_csv("data/products_dataset.csv", delimiter=",")
