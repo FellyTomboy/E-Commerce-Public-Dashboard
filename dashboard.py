@@ -212,7 +212,7 @@ with col[0]:
     
     unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
     state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
-    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'matter', 'br.json')
+    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'crest', 'br.json')
     st.markdown('#### Consumer Distribution Map')
     st.plotly_chart(choropleth_map)
 
@@ -237,7 +237,7 @@ with col[1]:
     fig.patch.set_alpha(0)
     ax.patch.set_alpha(0)
     palette = sns.color_palette('rocket', n_colors=10)
-    n, bins, patches = ax.hist(data, bins=30, edgecolor='white', color='#98137D')
+    n, bins, patches = ax.hist(data, bins=30, edgecolor='white', color='#4a998f')
     ax.set_title('Distribusi Harga', color='white')
     ax.set_xlabel('Harga', color='white')
     ax.set_ylabel('Frekuensi', color='white')
