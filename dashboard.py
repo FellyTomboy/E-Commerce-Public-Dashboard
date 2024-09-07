@@ -127,7 +127,7 @@ with st.sidebar:
     selected_labels = month_labels[values[0]-1:values[1]]
     
     category = st.multiselect(
-        label="Category Product (Max 3)",
+        label="Category Product (Max 4)",
         options=sorted(final_dataset['product_category_name'].unique()),
         default=['cama_mesa_banho', 'beleza_saude', 'esporte_lazer', 'moveis_decoracao']
     )
