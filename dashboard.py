@@ -212,7 +212,9 @@ with col[0]:
     
     unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
     state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
-    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'GnBu', 'br.json')
+    crest_palette = sns.color_palette('crest', as_cmap=False)
+    crest_colors = [f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})" for r, g, b in crest_palette]
+    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', crest_colors, 'br.json')
     st.markdown('#### Consumer Distribution Map')
     st.plotly_chart(choropleth_map)
 
