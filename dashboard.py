@@ -212,7 +212,7 @@ with col[0]:
     
     unique_customers = customer_dataset.drop_duplicates(subset='customer_id', keep='first')
     state_counts = unique_customers.groupby('customer_state').size().reset_index(name='count')
-    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'dense', 'br.json')
+    choropleth_map = make_choropleth(state_counts, 'customer_state', 'count', 'GnBu', 'br.json')
     st.markdown('#### Consumer Distribution Map')
     st.plotly_chart(choropleth_map)
 
