@@ -19,7 +19,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     # Read the CSV file using the relative path
-    order_dataset = pd.read_csv("data/orders_dataset.csv", delimiter=",")
+    orders_dataset = pd.read_csv("data/orders_dataset.csv", delimiter=",")
     products_dataset = pd.read_csv("data/products_dataset.csv", delimiter=",")
     order_items_dataset = pd.read_csv("data/order_items_dataset.csv", delimiter=",")
     customer_dataset = pd.read_csv("data/customers_dataset.csv", delimiter=",")
