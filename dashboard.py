@@ -34,7 +34,7 @@ def load_data():
     )
     orders_dataset = pd.merge(
         left=merged,
-        right=order_dataset,
+        right=orders_dataset,
         how="inner",
         left_on="order_id",
         right_on="order_id"
@@ -46,68 +46,119 @@ def load_data():
         left_on="customer_id",
         right_on="customer_id"
     )
+    return final_dataset, customer_dataset
 
-    # START DATA CLEANING
+# Call load_data() function and store the result in the final_dataset variable
+final_dataset, customer_dataset= load_data()
 
-    # 1. Convert date data type to datetime
-    final_dataset['order_delivered_carrier_date'] = pd.to_datetime(final_dataset['order_delivered_carrier_date'])
-    final_dataset['order_estimated_delivery_date'] = pd.to_datetime(final_dataset['order_estimated_delivery_date'])
-    final_dataset['order_delivered_customer_date'] = pd.to_datetime(final_dataset['order_delivered_customer_date'], errors='coerce')
+# Outlier Identification with IQR
+q1 = final_dataset['price'].quantile(0.25)
+q3 = final_dataset['price'].quantile(0.75)
+iqr = q3 - q1
+lower_bound = q1 - 1.5 * iqr
+upper_bound = q3 + 1.5 * iqr
+outliers_condition = (final_dataset['price'] < lower_bound) | (final_dataset['price'] > upper_bound)
 
-    # 2. Fill missing data in 'order_delivered_customer_date' with the average difference between 
-    #    'order_delivered_customer_date' and 'order_delivered_carrier_date'
-    average_delivery_time = (final_dataset['order_delivered_customer_date'] - final_dataset['order_delivered_carrier_date']).mean()
-    final_dataset['order_delivered_customer_date'] = final_dataset['order_delivered_customer_date'].fillna(final_dataset['order_delivered_carrier_date'] + average_delivery_time)
-    final_dataset = final_dataset.dropna(subset=['order_delivered_customer_date'])
+print("Outliers harga:")
+print(sum(outliers_condition))
 
-    # 3. Add a 'delivery_time' column
-    final_dataset['delivery_time']= (final_dataset['order_delivered_customer_date'] - final_dataset['order_delivered_carrier_date'])
-    final_dataset['delivery_time'] = final_dataset['delivery_time'].dt.days
-    final_dataset = final_dataset[final_dataset['delivery_time'] >= 0]
+# Display dataset information
+print("===== DATA INFO =====")
+print(final_dataset.info())
+print(customer_dataset.info())
 
-    # 4. Add 'year' and 'month' columns based on 'order_delivered_customer_date'
-    final_dataset['year'] = final_dataset['order_delivered_customer_date'].dt.year
-    final_dataset['month'] = final_dataset['order_delivered_customer_date'].dt.month
+# Count missing values in each column
+print("\n===== MISSING VALUES =====")
+print(final_dataset.isnull().sum())
 
-    # 5. Fill missing data in the 'product_category_name' column with 'Unknown'
-    final_dataset.update(final_dataset[['product_category_name']].fillna('Unknown'))
+# Display descriptive statistics to identify potential outliers
+print("\n===== DESCRIPTIVE STATISTICS =====")
+print(final_dataset.describe())
 
-    # 6. Remove outliers in the 'price' column
-    q1 = final_dataset['price'].quantile(0.25)
-    q3 = final_dataset['price'].quantile(0.75)
-    iqr = q3 - q1
-    lower_bound = q1 - 1.5 * iqr
-    upper_bound = q3 + 1.5 * iqr
 
-    outliers_condition = (final_dataset['price'] < lower_bound) | (final_dataset['price'] > upper_bound)
-    final_dataset.drop(index=final_dataset[outliers_condition].index, inplace=True)
+# START DATA CLEANING
 
-    # 7. Trim unused columns
-    drop_columns = [
-        'shipping_limit_date', 'product_name_lenght',
-        'product_description_lenght', 'product_photos_qty', 'product_weight_g',
-        'product_length_cm', 'product_height_cm', 'product_width_cm',
-        'order_approved_at', 'order_delivered_carrier_date', 'order_estimated_delivery_date'
-    ]
-    final_dataset.drop(columns=drop_columns, inplace=True)
-    # 8. Arrange columns to be more structured
-    columns_order = [
-        'order_id', 'order_item_id','product_id', 'customer_id', 'seller_id','price', 
-        'product_category_name', 'order_status', 'order_delivered_customer_date', 'delivery_time', 'year', 'month',
-        'customer_unique_id', 'customer_city', 'customer_state'
-    ]
-    final_dataset = final_dataset[columns_order]
+# 1. Convert date data type to datetime
+final_dataset['order_delivered_carrier_date'] = pd.to_datetime(final_dataset['order_delivered_carrier_date'])
+final_dataset['order_estimated_delivery_date'] = pd.to_datetime(final_dataset['order_estimated_delivery_date'])
+final_dataset['order_delivered_customer_date'] = pd.to_datetime(final_dataset['order_delivered_customer_date'], errors='coerce')
+
+# 2. Fill missing data in 'order_delivered_customer_date' with the average difference between 
+#    'order_delivered_customer_date' and 'order_delivered_carrier_date'
+average_delivery_time = (final_dataset['order_delivered_customer_date'] - final_dataset['order_delivered_carrier_date']).mean()
+final_dataset['order_delivered_customer_date'] = final_dataset['order_delivered_customer_date'].fillna(final_dataset['order_delivered_carrier_date'] + average_delivery_time)
+final_dataset = final_dataset.dropna(subset=['order_delivered_customer_date'])
+
+# 3. Add a 'delivery_time' column
+final_dataset['delivery_time']= (final_dataset['order_delivered_customer_date'] - final_dataset['order_delivered_carrier_date'])
+final_dataset['delivery_time'] = final_dataset['delivery_time'].dt.days
+final_dataset = final_dataset[final_dataset['delivery_time'] >= 0]
+
+# 4. Add 'year' and 'month' columns based on 'order_delivered_customer_date'
+final_dataset['year'] = final_dataset['order_delivered_customer_date'].dt.year
+final_dataset['month'] = final_dataset['order_delivered_customer_date'].dt.month
+
+# 5. Fill missing data in the 'product_category_name' column with 'Unknown'
+final_dataset.update(final_dataset[['product_category_name']].fillna('Unknown'))
+
+# 6. Remove outliers in the 'price' column
+q1 = final_dataset['price'].quantile(0.25)
+q3 = final_dataset['price'].quantile(0.75)
+iqr = q3 - q1
+lower_bound = q1 - 1.5 * iqr
+upper_bound = q3 + 1.5 * iqr
+
+outliers_condition = (final_dataset['price'] < lower_bound) | (final_dataset['price'] > upper_bound)
+final_dataset.drop(index=final_dataset[outliers_condition].index, inplace=True)
+
+# 7. Trim unused columns
+drop_columns = [
+    'shipping_limit_date', 'product_name_lenght',
+    'product_description_lenght', 'product_photos_qty', 'product_weight_g',
+    'product_length_cm', 'product_height_cm', 'product_width_cm',
+    'order_approved_at', 'order_delivered_carrier_date', 'order_estimated_delivery_date'
+]
+final_dataset.drop(columns=drop_columns, inplace=True)
+# 8. Arrange columns to be more structured
+columns_order = [
+    'order_id', 'order_item_id','product_id', 'customer_id', 'seller_id','price', 
+    'product_category_name', 'order_status', 'order_delivered_customer_date', 'delivery_time', 'year', 'month',
+    'customer_unique_id', 'customer_city', 'customer_state'
+]
+final_dataset = final_dataset[columns_order]
     
-    return final_dataset
-
-final_dataset = load_data() 
-customer_dataset=  load_data()
-
 
 # START EXPLORATORY DATA ANALYSIS
 
-# 1. Display statistics of final_dataset
+# 1. General Information
+print("General Information:")
+print(final_dataset.info())
+print("\nDescriptive Statistics:")
 print(final_dataset.describe())
+
+# 2. Average Delivery Time by Category
+average_delivery_time_by_category = final_dataset.groupby('product_category_name')['delivery_time'].mean().sort_values()
+print("\nAverage Delivery Time by Product Category:")
+print(average_delivery_time_by_category)
+
+# 3. Average Price by Category
+average_price_by_category = final_dataset.groupby('product_category_name')['price'].mean().sort_values()
+print("\nAverage Price by Product Category:")
+print(average_price_by_category)
+
+# 4. Total Sales by Year and Month
+sales_by_year_month = final_dataset.groupby(['year', 'month'])['price'].sum().unstack()
+print("\nTotal Sales by Year and Month:")
+print(sales_by_year_month)
+
+# 5. Demographic Analysis by City and State
+city_distribution = customer_dataset.groupby('customer_city').customer_id.nunique().sort_values(ascending=False)
+state_distribution = customer_dataset.groupby('customer_state').customer_id.nunique().sort_values(ascending=False)
+print("\nCustomer Count by City:")
+print(city_distribution)
+print("\nCustomer Count by State:")
+print(state_distribution)
+
 
 # START DATA VISUALIZATION IN STREAMLIT
 
@@ -127,7 +178,7 @@ with st.sidebar:
     selected_labels = month_labels[values[0]-1:values[1]]
     
     category = st.multiselect(
-        label="Category Product (Max 4)",
+        label="Category Product (Max 3)",
         options=sorted(final_dataset['product_category_name'].unique()),
         default=['cama_mesa_banho', 'beleza_saude', 'esporte_lazer', 'moveis_decoracao']
     )
@@ -160,12 +211,10 @@ with col[0]:
 
     # Display chart
     st.markdown('#### Items Sold Per Categories')
-    # Daftar warna yang disediakan
+    # Function to adjust color based on the number of categories
     colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
-    # Fungsi untuk menyesuaikan warna dengan jumlah kategori
     def adjust_colors(colors, num_categories):
         return colors[:num_categories] + [colors[-1]] * (num_categories - len(colors))
-    # Menyaring warna yang sesuai
     color_map = adjust_colors(colors, len(category))
     st.bar_chart(chart_data, color=color_map)
     
@@ -220,15 +269,11 @@ with col[0]:
 
 with col[1]:
     
-    # Hitung kategori teratas
+    # 5. Display table of the top 10 categories
     category_count = final_dataset['product_category_name'].value_counts().reset_index()
     category_count.columns = ['product_category_name', 'total_items_sold']
     top_categories = category_count.head(10)
-
-    # Ubah angka menjadi string
     top_categories['total_items_sold'] = top_categories['total_items_sold'].astype(str)
-
-    # Tampilkan tabel dengan st.table
     st.markdown('#### Top 10 Kategori')
     st.table(top_categories)
     
