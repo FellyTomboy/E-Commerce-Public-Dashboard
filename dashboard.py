@@ -50,6 +50,7 @@ final_dataset = final_dataset.dropna(subset=['order_delivered_customer_date'])
 final_dataset['delivery_time'] = (final_dataset['order_delivered_customer_date'] - final_dataset['order_delivered_carrier_date']).dt.days
 final_dataset = final_dataset[final_dataset['delivery_time'] >= 0]
 
+final_dataset = final_dataset.copy()
 final_dataset['year'] = final_dataset['order_delivered_customer_date'].dt.year
 final_dataset['month'] = final_dataset['order_delivered_customer_date'].dt.month
 final_dataset.update(final_dataset[['product_category_name']].fillna('Unknown'))
@@ -92,7 +93,7 @@ with st.sidebar:
     selected_labels = month_labels[values[0]-1:values[1]]
 
     category = st.multiselect(
-        label="Category Product (Max 3)",
+        label="Category Product (Max 4)",
         options=sorted(final_dataset['product_category_name'].unique()),
         default=['cama_mesa_banho', 'beleza_saude', 'esporte_lazer', 'moveis_decoracao']
     )
@@ -103,17 +104,26 @@ with st.sidebar:
 col = st.columns((5, 5), gap='large')
 
 with col[0]:
-    selected_data = final_dataset[(final_dataset['year'] == selected_year) &
-                                  (final_dataset['month'].between(values[0], values[1])) & 
-                                  (final_dataset['order_status'] == 'delivered') &
-                                  (final_dataset['product_category_name'].isin(category))]
+    selected_data = final_dataset.loc[
+        (final_dataset['year'] == selected_year) &
+        (final_dataset['month'].between(values[0], values[1])) & 
+        (final_dataset['order_status'] == 'delivered') &
+        (final_dataset['product_category_name'].isin(category))
+    ].copy()
+
 
     monthly_selected_category = selected_data.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
     monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
     monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
     monthly_selected_category = monthly_selected_category.sort_values('month')
 
-    chart_data = monthly_selected_category.pivot_table(index='month', columns='product_category_name', values='item_count', fill_value=0)
+   chart_data = monthly_selected_category.pivot_table(
+    index='month',
+    columns='product_category_name',
+    values='item_count',
+    fill_value=0,
+    observed=False
+)
 
     st.markdown('#### Items Sold Per Categories')
     colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
