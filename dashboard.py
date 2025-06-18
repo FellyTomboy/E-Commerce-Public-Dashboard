@@ -114,34 +114,51 @@ with tab1:
 
 with tab2:
     st.markdown("### Consumer Distribution Map")
+
     with st.spinner("🔍 Memuat peta..."):
+        # Load GeoJSON (cached)
         geojson_data = load_geojson('br.json')
+
+        # Cache pemetaan ID -> Nama
+        @st.cache_data
+        def generate_state_name_map(geojson_data):
+            return {
+                feature['properties']['id']: feature['properties']['name']
+                for feature in geojson_data['features']
+            }
+
+        state_name_map = generate_state_name_map(geojson_data)
+
+        # Hitung jumlah customer unik per state
         customer_unique = customer_dataset.drop_duplicates('customer_id')
         state_counts = customer_unique.groupby('customer_state').size().reset_index(name='count')
-        state_counts['state_name'] = state_counts['customer_state'].map({
-            feature['properties']['id']: feature['properties']['name']
-            for feature in geojson_data['features']
-        })
+        state_counts['state_name'] = state_counts['customer_state'].map(state_name_map)
 
+        # Peta Choropleth
         fig = px.choropleth(
             state_counts,
             geojson=geojson_data,
             locations='customer_state',
             featureidkey="properties.id",
             color='count',
-            color_continuous_scale='Tealgrn',
+            color_continuous_scale=['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a'],
             range_color=(0, state_counts['count'].max()),
-            labels={'count': 'Customers'},
-            hover_name='state_name'
+            labels={'count': 'Jumlah Konsumen'},
+            hover_name='state_name',
+        )
+        fig.update_geos(
+            fitbounds="locations",
+            visible=False,
         )
         fig.update_layout(
-            geo=dict(scope='south america', center={"lat": -14.2350, "lon": -51.9253}, projection_scale=2),
             template='plotly_dark',
-            height=500, width=700,
+            height=500,
             margin=dict(l=0, r=0, t=0, b=0)
         )
-        st.plotly_chart(fig)
+
+        st.plotly_chart(fig, use_container_width=True)
         st.success("✅ Peta berhasil ditampilkan")
+
 
 with tab3:
     col1, col2 = st.columns(2)
