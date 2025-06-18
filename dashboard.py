@@ -116,6 +116,8 @@ with tab2:
     st.markdown("### Consumer Distribution Map")
     with st.spinner("🔍 Memuat peta..."):
         geojson_data = load_geojson('br.json')
+
+        # Agregasi unik customer per state
         customer_unique = customer_dataset.drop_duplicates('customer_id')
         state_counts = customer_unique.groupby('customer_state').size().reset_index(name='count')
         state_counts['state_name'] = state_counts['customer_state'].map({
@@ -123,25 +125,44 @@ with tab2:
             for feature in geojson_data['features']
         })
 
+        # Plotly Choropleth
         fig = px.choropleth(
             state_counts,
             geojson=geojson_data,
             locations='customer_state',
             featureidkey="properties.id",
             color='count',
-            color_continuous_scale='Tealgrn',
+            color_continuous_scale='Tealgrn_r',  # versi reversed dari 'Tealgrn' agar warna gelap = padat
             range_color=(0, state_counts['count'].max()),
-            labels={'count': 'Customers'},
+            labels={'count': 'Jumlah Konsumen'},
             hover_name='state_name'
         )
+
+        fig.update_geos(
+            visible=False,
+            showcountries=False,
+            showsubunits=True,
+            showframe=False,
+            bgcolor='black',
+            resolution=110,
+            showland=True,
+            landcolor='black',
+            lakecolor='black',
+        )
+
+        fig.update_traces(marker_line_width=0.5, marker_line_color="white")
+
         fig.update_layout(
-            geo=dict(scope='south america', center={"lat": -14.2350, "lon": -51.9253}, projection_scale=2),
-            template='plotly_dark',
-            height=500, width=700,
+            paper_bgcolor='black',
+            geo_bgcolor='black',
+            geo=dict(scope='south america', center={"lat": -14.2350, "lon": -51.9253}, projection_scale=2.3),
+            height=500,
             margin=dict(l=0, r=0, t=0, b=0)
         )
-        st.plotly_chart(fig)
+
+        st.plotly_chart(fig, use_container_width=True)
         st.success("✅ Peta berhasil ditampilkan")
+
 
 with tab3:
     col1, col2 = st.columns(2)
