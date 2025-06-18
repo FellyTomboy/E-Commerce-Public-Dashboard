@@ -114,63 +114,34 @@ with tab1:
 
 with tab2:
     st.markdown("### Consumer Distribution Map")
-
     with st.spinner("🔍 Memuat peta..."):
-        # Load GeoJSON (cached)
         geojson_data = load_geojson('br.json')
-
-        # Cache pemetaan ID -> Nama
-        @st.cache_data
-        def generate_state_name_map(geojson_data):
-            return {
-                feature['properties']['id']: feature['properties']['name']
-                for feature in geojson_data['features']
-            }
-
-        state_name_map = generate_state_name_map(geojson_data)
-
-        # Hitung jumlah customer unik per state
         customer_unique = customer_dataset.drop_duplicates('customer_id')
         state_counts = customer_unique.groupby('customer_state').size().reset_index(name='count')
-        state_counts['state_name'] = state_counts['customer_state'].map(state_name_map)
+        state_counts['state_name'] = state_counts['customer_state'].map({
+            feature['properties']['id']: feature['properties']['name']
+            for feature in geojson_data['features']
+        })
 
-                # Peta Choropleth
         fig = px.choropleth(
             state_counts,
             geojson=geojson_data,
             locations='customer_state',
             featureidkey="properties.id",
             color='count',
-            color_continuous_scale=px.colors.sequential.Tealgrn[::-1],  # Balik supaya padat = gelap
+            color_continuous_scale='Tealgrn',
             range_color=(0, state_counts['count'].max()),
-            labels={'count': 'Jumlah Konsumen'},
+            labels={'count': 'Customers'},
             hover_name='state_name'
         )
-        
-        fig.update_geos(
-            showcountries=False, showcoastlines=False, showland=False,
-            fitbounds="locations"
-        )
-        
-        fig.update_traces(marker_line_width=1.5, marker_line_color="white")  # Garis batas wilayah = putih
-        
         fig.update_layout(
-            geo=dict(
-                bgcolor='black'  # Latar belakang area peta = hitam
-            ),
-            plot_bgcolor='black',   # Latar belakang luar (plot canvas) = hitam
-            paper_bgcolor='black',  # Latar belakang keseluruhan = hitam
-            font_color='white',     # Warna teks = putih
-            margin=dict(l=0, r=0, t=30, b=0),
-            height=500,
-            width=800,
-            template=None
+            geo=dict(scope='south america', center={"lat": -14.2350, "lon": -51.9253}, projection_scale=2),
+            template='plotly_dark',
+            height=500, width=700,
+            margin=dict(l=0, r=0, t=0, b=0)
         )
-        
-        st.plotly_chart(fig, use_container_width=True)
-
+        st.plotly_chart(fig)
         st.success("✅ Peta berhasil ditampilkan")
-
 
 with tab3:
     col1, col2 = st.columns(2)
@@ -183,23 +154,12 @@ with tab3:
     with col2:
         st.markdown("### Distribusi Harga")
         fig, ax = plt.subplots(figsize=(8, 5))
-    
-        # Set latar belakang hitam
-        fig.patch.set_facecolor('black')   # Latar belakang luar plot
-        ax.set_facecolor('black')          # Latar belakang area grafik
-    
-        # Histogram
+        fig.patch.set_alpha(0)
         ax.hist(final_dataset['price'], bins=30, edgecolor='white', color='#4a998f')
-    
-        # Judul dan Label
         ax.set_title('Distribusi Harga', color='white')
         ax.set_xlabel('Harga', color='white')
         ax.set_ylabel('Frekuensi', color='white')
-    
-        # Warna axis & spines
         ax.tick_params(axis='both', colors='white')
         for spine in ax.spines.values():
             spine.set_edgecolor('white')
-    
         st.pyplot(fig)
-
