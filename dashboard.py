@@ -190,7 +190,7 @@ with col[0]:
 with col[1]:
     category_count = final_dataset['product_category_name'].value_counts().reset_index()
     category_count.columns = ['product_category_name', 'total_items_sold']
-    top_categories = category_count.head(10)
+    top_categories = category_count.head(10).copy()
     top_categories['total_items_sold'] = top_categories['total_items_sold'].astype(str)
     st.markdown('#### Top 10 Kategori')
     st.table(top_categories)
