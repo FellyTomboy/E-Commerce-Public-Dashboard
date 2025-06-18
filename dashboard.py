@@ -53,7 +53,8 @@ final_dataset = final_dataset[final_dataset['delivery_time'] >= 0]
 final_dataset = final_dataset.copy()
 final_dataset['year'] = final_dataset['order_delivered_customer_date'].dt.year
 final_dataset['month'] = final_dataset['order_delivered_customer_date'].dt.month
-final_dataset.update(final_dataset[['product_category_name']].fillna('Unknown'))
+final_dataset['product_category_name'] = final_dataset['product_category_name'].fillna('Unknown')
+
 
 # Remove Outliers
 q1 = final_dataset['price'].quantile(0.25)
