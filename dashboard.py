@@ -129,7 +129,7 @@ with tab2:
             locations='customer_state',
             featureidkey="properties.id",
             color='count',
-            color_continuous_scale='Crest',
+            color_continuous_scale='Tealgrn',
             range_color=(0, state_counts['count'].max()),
             labels={'count': 'Customers'},
             hover_name='state_name'
