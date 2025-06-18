@@ -42,23 +42,6 @@ lower_bound = q1 - 1.5 * iqr
 upper_bound = q3 + 1.5 * iqr
 outliers_condition = (final_dataset['price'] < lower_bound) | (final_dataset['price'] > upper_bound)
 
-print("Outliers harga:")
-print(sum(outliers_condition))
-
-# Display dataset information
-print("===== DATA INFO =====")
-print(final_dataset.info())
-print(customer_dataset.info())
-
-# Count missing values in each column
-print("\n===== MISSING VALUES =====")
-print(final_dataset.isnull().sum())
-
-# Display descriptive statistics to identify potential outliers
-print("\n===== DESCRIPTIVE STATISTICS =====")
-print(final_dataset.describe())
-
-
 # START DATA CLEANING
 
 # 1. Convert date data type to datetime
