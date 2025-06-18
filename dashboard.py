@@ -171,12 +171,23 @@ with tab3:
     with col2:
         st.markdown("### Distribusi Harga")
         fig, ax = plt.subplots(figsize=(8, 5))
-        fig.patch.set_alpha(0)
+    
+        # Set latar belakang hitam
+        fig.patch.set_facecolor('black')   # Latar belakang luar plot
+        ax.set_facecolor('black')          # Latar belakang area grafik
+    
+        # Histogram
         ax.hist(final_dataset['price'], bins=30, edgecolor='white', color='#4a998f')
+    
+        # Judul dan Label
         ax.set_title('Distribusi Harga', color='white')
         ax.set_xlabel('Harga', color='white')
         ax.set_ylabel('Frekuensi', color='white')
+    
+        # Warna axis & spines
         ax.tick_params(axis='both', colors='white')
         for spine in ax.spines.values():
             spine.set_edgecolor('white')
+    
         st.pyplot(fig)
+
