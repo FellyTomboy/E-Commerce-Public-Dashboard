@@ -134,29 +134,41 @@ with tab2:
         state_counts = customer_unique.groupby('customer_state').size().reset_index(name='count')
         state_counts['state_name'] = state_counts['customer_state'].map(state_name_map)
 
-        # Peta Choropleth
+                # Peta Choropleth
         fig = px.choropleth(
             state_counts,
             geojson=geojson_data,
             locations='customer_state',
             featureidkey="properties.id",
             color='count',
-            color_continuous_scale=['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a'],
+            color_continuous_scale=px.colors.sequential.Tealgrn[::-1],  # Balik supaya padat = gelap
             range_color=(0, state_counts['count'].max()),
             labels={'count': 'Jumlah Konsumen'},
-            hover_name='state_name',
+            hover_name='state_name'
         )
+        
         fig.update_geos(
-            fitbounds="locations",
-            visible=False,
+            showcountries=False, showcoastlines=False, showland=False,
+            fitbounds="locations"
         )
+        
+        fig.update_traces(marker_line_width=1.5, marker_line_color="white")  # Garis batas wilayah = putih
+        
         fig.update_layout(
-            template='plotly_dark',
+            geo=dict(
+                bgcolor='black'  # Latar belakang area peta = hitam
+            ),
+            plot_bgcolor='black',   # Latar belakang luar (plot canvas) = hitam
+            paper_bgcolor='black',  # Latar belakang keseluruhan = hitam
+            font_color='white',     # Warna teks = putih
+            margin=dict(l=0, r=0, t=30, b=0),
             height=500,
-            margin=dict(l=0, r=0, t=0, b=0)
+            width=800,
+            template=None
         )
-
+        
         st.plotly_chart(fig, use_container_width=True)
+
         st.success("✅ Peta berhasil ditampilkan")
 
 
