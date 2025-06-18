@@ -181,7 +181,7 @@ with tab2:
         locations="customer_state",
         featureidkey="id",
         color="count",
-        color_continuous_scale="Tealgrn",
+        color_continuous_scale="Tealgrn_r",
         hover_name="state_name",
         range_color=(0, state_counts["count"].max()),
         labels={"count": "Customers"}
@@ -192,17 +192,21 @@ with tab2:
             center={"lat": -14.2350, "lon": -51.9253},
             projection_scale=2,
             showland=True,
-            landcolor="black",
-            oceancolor="black",
-            bgcolor="black",
-            countrycolor="white",
-            subunitcolor="white"
+            landcolor='black',
+            oceancolor='black',
+            bgcolor='black',
+            showcountries=True,
+            countrycolor='white',
+            showlakes=False,
+            lakecolor='black',
+            showframe=False
         ),
-        paper_bgcolor="black",
-        plot_bgcolor="black",
-        template="plotly_dark",
-        margin=dict(l=0, r=0, t=0, b=0)
+        paper_bgcolor='black',
+        plot_bgcolor='black',
+        template='plotly_dark',
+        margin=dict(l=0, r=0, t=0, b=0),
     )
+
     st.plotly_chart(fig)
 
 with tab3:
