@@ -117,13 +117,13 @@ with col[0]:
     monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
     monthly_selected_category = monthly_selected_category.sort_values('month')
 
-   chart_data = monthly_selected_category.pivot_table(
-    index='month',
-    columns='product_category_name',
-    values='item_count',
-    fill_value=0,
-    observed=False
-)
+    chart_data = monthly_selected_category.pivot_table(
+        index='month',
+        columns='product_category_name',
+        values='item_count',
+        fill_value=0,
+        observed=False
+    )
 
     st.markdown('#### Items Sold Per Categories')
     colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
