@@ -132,7 +132,26 @@ with tab1:
             colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
             color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
             st.bar_chart(chart_data, color=color_map)
-            st.success("Grafik penjualan siap ditampilkan ✅")
+
+            st.markdown("### 🏙️ Top 5 Cities by Total Sales")
+
+            top_cities = selected_data.groupby(['customer_city', 'customer_state']).size().reset_index(name='total_items_sold')
+            top_cities = top_cities.sort_values('total_items_sold', ascending=False).head(5)
+            top_cities_display = top_cities.copy()
+            top_cities_display.columns = ['City', 'State', 'Total Items Sold']
+            selected_city = st.selectbox("Select a city to view product details:", top_cities_display['City'])
+    
+            st.dataframe(top_cities_display, use_container_width=True)
+    
+            # ==================== PRODUCT BREAKDOWN FOR SELECTED CITY ====================
+            st.markdown(f"### 📦 Product Breakdown for {selected_city}")
+    
+            # Pivot table of product counts by city
+            product_by_city = selected_data[selected_data['customer_city'] == selected_city]
+            product_counts = product_by_city['product_category_name'].value_counts().reset_index()
+            product_counts.columns = ['Product Category', 'Total Sold']
+    
+            st.table(product_counts)
 
 # ================= TAB 2: PENJUALAN WILAYAH =================
 with tab2:
