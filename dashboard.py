@@ -157,7 +157,7 @@ with tab1:
     
             selected_rows = grid_response['selected_rows']
             if not pd.DataFrame(selected_rows).empty:
-                selected_row = selected_rows[0]
+                selected_row = selected_rows.iloc[0]
                 selected_city = selected_row['city_state'].split(", ")[0]
                 selected_state = selected_row['city_state'].split(", ")[1]
     
