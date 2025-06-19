@@ -195,7 +195,7 @@ with tab3:
     
     with col2:
         with st.spinner('Menghitung distribusi harga...'):
-            progress_bar = st.progress(0)
+            progress_bar = st.progress(10)
             st.markdown('### 💸 Distribusi Harga')
             data = orders_final_dataset['price'].dropna()
             progress_bar.progress(30)
@@ -205,10 +205,11 @@ with tab3:
             else:
                 bin_size = 30
                 nbins = int((data.max() - data.min()) / bin_size)
+                progress_bar.progress(60)
 
                 fig = px.histogram(
-                    data,
-                    x=data,
+                    orders_final_dataset,
+                    x="price",
                     nbins=nbins,
                     title="Distribusi Harga",
                     color_discrete_sequence=["#4a998f"]
