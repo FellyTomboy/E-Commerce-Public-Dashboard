@@ -141,6 +141,10 @@ with tab2:
         # Load GeoJSON
         geojson_data = load_geojson("br.json")
 
+        # Salin ID ke properties
+        for feature in geojson_data["features"]:
+            feature["properties"]["id"] = feature["id"]
+
         # Buat mapping id → name dari geojson
         id_to_name = {
             feature["id"]: feature["properties"]["name"]
@@ -149,11 +153,8 @@ with tab2:
 
         # Hitung jumlah konsumen per state
         state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
-
-        # Tambahkan nama state untuk hover
         state_counts['state_name'] = state_counts['customer_state'].map(id_to_name).fillna(state_counts['customer_state'])
 
-        # Tampilkan jumlah negara bagian yang terdeteksi
         st.write("📌 Jumlah Negara Bagian Terdeteksi:", len(state_counts))
 
         # Buat peta choropleth
@@ -161,7 +162,7 @@ with tab2:
             state_counts,
             geojson=geojson_data,
             locations="customer_state",
-            featureidkey="id",
+            featureidkey="properties.id",  # ✅ Perbaikan di sini
             color="count",
             color_continuous_scale="Tealgrn",
             range_color=(0, state_counts["count"].max()),
@@ -169,10 +170,7 @@ with tab2:
             labels={"count": "Jumlah Konsumen"}
         )
 
-        # Zoom sesuai dengan isi GeoJSON (seluruh wilayah Brasil)
         fig.update_geos(fitbounds="geojson", visible=False, bgcolor="black")
-
-        # Layout tampilan
         fig.update_layout(
             template="plotly_dark",
             paper_bgcolor="black",
@@ -188,13 +186,8 @@ with tab2:
             margin={"r":0,"t":0,"l":0,"b":0}
         )
 
-        # Tampilkan peta
         st.plotly_chart(fig, use_container_width=True)
         st.success("Peta berhasil dimuat ✅")
-
-        # Tampilkan cuplikan data pelanggan
-        st.markdown("#### 📋 Cuplikan Data Konsumen")
-        st.dataframe(customers_final_dataset.head(10))
 
 # ================= TAB 3: TOP KATEGORI & HARGA =================
 with tab3:
