@@ -2,6 +2,7 @@ pandas
 matplotlib
 seaborn
 streamlit
+streamlit-aggrid
 altair
 plotly
 requests
