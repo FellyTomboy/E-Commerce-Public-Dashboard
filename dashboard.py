@@ -227,11 +227,12 @@ with col2:
             bin_edges = list(range(price_min, price_max + bin_size, bin_size))
 
             fig = px.histogram(
-                orders_final_dataset,
+                pd.DataFrame({"price": data}),
                 x="price",
-                nbins=len(bin_edges)-1,
+                nbins=len(bin_edges) - 1,
                 title="Distribusi Harga (bin size = 20)",
-                color_discrete_sequence=["#4a998f"]
+                color_discrete_sequence=["#4a998f"],
+                histfunc="count"
             )
             fig.update_traces(marker_line_color="white", marker_line_width=1)
 
