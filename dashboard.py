@@ -133,17 +133,30 @@ with tab1:
 
 
 # ================= TAB 2: MAP =================
+# ================= TAB 2: MAP =================
 with tab2:
     with st.spinner('Memuat peta sebaran konsumen...'):
         st.markdown("### 🌍 Peta Sebaran Konsumen")
 
+        # Load GeoJSON
         geojson_data = load_geojson("br.json")
 
-        state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
-        state_counts['state_name'] = state_counts['customer_state'].map({
-            feature["id"]: feature["properties"]["name"] for feature in geojson_data["features"]
-        })
+        # Buat mapping id → name dari geojson
+        id_to_name = {
+            feature["id"]: feature["properties"]["name"]
+            for feature in geojson_data["features"]
+        }
 
+        # Hitung jumlah konsumen per state
+        state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+
+        # Tambahkan nama state untuk hover
+        state_counts['state_name'] = state_counts['customer_state'].map(id_to_name).fillna(state_counts['customer_state'])
+
+        # Tampilkan jumlah negara bagian yang terdeteksi
+        st.write("📌 Jumlah Negara Bagian Terdeteksi:", len(state_counts))
+
+        # Buat peta choropleth
         fig = px.choropleth(
             state_counts,
             geojson=geojson_data,
@@ -155,7 +168,11 @@ with tab2:
             hover_name="state_name",
             labels={"count": "Jumlah Konsumen"}
         )
-        fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
+
+        # Zoom sesuai dengan isi GeoJSON (seluruh wilayah Brasil)
+        fig.update_geos(fitbounds="geojson", visible=False, bgcolor="black")
+
+        # Layout tampilan
         fig.update_layout(
             template="plotly_dark",
             paper_bgcolor="black",
@@ -170,12 +187,14 @@ with tab2:
             ),
             margin={"r":0,"t":0,"l":0,"b":0}
         )
+
+        # Tampilkan peta
         st.plotly_chart(fig, use_container_width=True)
         st.success("Peta berhasil dimuat ✅")
+
+        # Tampilkan cuplikan data pelanggan
         st.markdown("#### 📋 Cuplikan Data Konsumen")
         st.dataframe(customers_final_dataset.head(10))
-
-
 
 # ================= TAB 3: TOP KATEGORI & HARGA =================
 with tab3:
