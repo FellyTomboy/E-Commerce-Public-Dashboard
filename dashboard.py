@@ -144,11 +144,6 @@ with tab2:
     id_to_name = {f["properties"]["id"]: f["properties"]["name"] for f in geojson_data["features"]}
     name_to_id = {v: k for k, v in id_to_name.items()}
 
-    # Dropdown nama wilayah
-    all_states = sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique())
-    selected_state_name = st.selectbox("Pilih negara bagian:", all_states)
-    selected_state = name_to_id[selected_state_name]
-
     # Layout peta kiri, metrik+tabel kanan
     col_map, col_info = st.columns([3, 2])
 
@@ -186,6 +181,10 @@ with tab2:
         st.plotly_chart(fig, use_container_width=True)
 
     with col_info:
+        # Dropdown nama wilayah
+        all_states = sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique())
+        selected_state_name = st.selectbox("Pilih negara bagian:", all_states)
+        selected_state = name_to_id[selected_state_name]
         st.markdown(f"#### 🧭 Analisis untuk: {selected_state_name}")
 
         state_filtered = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
