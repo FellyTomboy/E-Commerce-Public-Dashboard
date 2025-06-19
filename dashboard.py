@@ -173,22 +173,27 @@ with tab3:
 
     with col2:
         st.markdown('### 💸 Distribusi Harga')
-        if orders_final_dataset['price'].dropna().empty:
+        data = orders_final_dataset['price'].dropna()
+    
+        if data.empty:
             st.warning("Data harga tidak tersedia.")
         else:
+            q25, q75 = data.quantile([0.25, 0.75])
+            bin_width = 2 * (q75 - q25) * len(data) ** (-1/3)
+            bin_size = round(bin_width, 2) if bin_width > 0 else 10
+    
             fig = px.histogram(
                 orders_final_dataset,
-                x='price',
-                nbins=30,
-                title='Distribusi Harga',
-                color_discrete_sequence=['#4a998f']
+                x="price",
+                nbins=int((data.max() - data.min()) / bin_size),
+                title="Distribusi Harga",
+                color_discrete_sequence=["#4a998f"]
             )
             fig.update_layout(
-                plot_bgcolor='black',
-                paper_bgcolor='black',
-                font=dict(color='white'),
-                xaxis=dict(title='Harga'),
-                yaxis=dict(title='Frekuensi')
+                xaxis_title="Harga",
+                yaxis_title="Frekuensi",
+                font=dict(color="white"),
+                plot_bgcolor="black",
+                paper_bgcolor="black"
             )
             st.plotly_chart(fig, use_container_width=True)
-
