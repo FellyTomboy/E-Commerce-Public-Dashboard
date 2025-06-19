@@ -241,7 +241,7 @@ with tab3:
                 df['price_bin'] = pd.cut(df['price'], bins=bin_edges)
     
                 # Hitung frekuensi per bin
-                bin_df = df.groupby('price_bin').size().reset_index(name='count')
+                bin_df = df.groupby('price_bin', observed=True).size().reset_index(name='count')
                 bin_df['bin_start'] = bin_df['price_bin'].apply(lambda x: int(x.left))
                 bin_df['bin_end'] = bin_df['price_bin'].apply(lambda x: int(x.right))
                 bin_df['range_label'] = bin_df['bin_start'].astype(str) + ' - ' + bin_df['bin_end'].astype(str)
