@@ -91,6 +91,7 @@ tab1, tab2, tab3 = st.tabs(["📦 Penjualan Bulanan", "🌍 Penjualan Wilayah", 
 # ================= TAB 1: GRAFIK + FILTER =================
 with tab1:
     st.title('📦 Penjualan Bulanan')
+    col_filter, col_graph = st.columns([1, 3])
 
     with col_filter:
         # Filter Setting
