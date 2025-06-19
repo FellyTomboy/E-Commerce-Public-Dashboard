@@ -246,7 +246,6 @@ with col2:
             ).properties(
                 width='container',
                 height=400,
-                title='Distribusi Harga (bin size = 20)'
             ).configure_view(
                 stroke=None
             ).configure_axis(
