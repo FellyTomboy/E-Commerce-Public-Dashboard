@@ -189,15 +189,14 @@ with tab3:
             if filtered_data.empty:
                 st.warning("Tidak ada data harga yang tersisa setelah menghapus outlier.")
             else:
-                # Gunakan Freedman–Diaconis rule untuk bin size
-                q25, q75 = filtered_data.quantile([0.25, 0.75])
-                bin_width = 2 * (q75 - q25) * len(filtered_data) ** (-1/3)
-                bin_size = round(bin_width, 2) if bin_width > 0 else 10
+                # Tetapkan bin size manual agar rentang antar bins lebar (misal 50)
+                bin_size = 50
+                nbins = int((filtered_data.max() - filtered_data.min()) / bin_size)
     
                 fig = px.histogram(
                     filtered_data,
                     x=filtered_data,
-                    nbins=int((filtered_data.max() - filtered_data.min()) / bin_size),
+                    nbins=nbins,
                     title="Distribusi Harga (tanpa Outlier)",
                     color_discrete_sequence=["#4a998f"]
                 )
