@@ -170,7 +170,7 @@ with tab3:
         category_count.columns = ['product_category_name', 'total_items_sold']
         top_categories = category_count.head(10)
         st.table(top_categories)
-
+    
     with col2:
         st.markdown('### 💸 Distribusi Harga')
         data = orders_final_dataset['price'].dropna()
@@ -178,22 +178,34 @@ with tab3:
         if data.empty:
             st.warning("Data harga tidak tersedia.")
         else:
-            q25, q75 = data.quantile([0.25, 0.75])
-            bin_width = 2 * (q75 - q25) * len(data) ** (-1/3)
-            bin_size = round(bin_width, 2) if bin_width > 0 else 10
+            # Hapus outlier dengan metode IQR
+            q1 = data.quantile(0.25)
+            q3 = data.quantile(0.75)
+            iqr = q3 - q1
+            lower_bound = q1 - 1.5 * iqr
+            upper_bound = q3 + 1.5 * iqr
+            filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
     
-            fig = px.histogram(
-                orders_final_dataset,
-                x="price",
-                nbins=int((data.max() - data.min()) / bin_size),
-                title="Distribusi Harga",
-                color_discrete_sequence=["#4a998f"]
-            )
-            fig.update_layout(
-                xaxis_title="Harga",
-                yaxis_title="Frekuensi",
-                font=dict(color="white"),
-                plot_bgcolor="black",
-                paper_bgcolor="black"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            if filtered_data.empty:
+                st.warning("Tidak ada data harga yang tersisa setelah menghapus outlier.")
+            else:
+                # Gunakan Freedman–Diaconis rule untuk bin size
+                q25, q75 = filtered_data.quantile([0.25, 0.75])
+                bin_width = 2 * (q75 - q25) * len(filtered_data) ** (-1/3)
+                bin_size = round(bin_width, 2) if bin_width > 0 else 10
+    
+                fig = px.histogram(
+                    filtered_data,
+                    x=filtered_data,
+                    nbins=int((filtered_data.max() - filtered_data.min()) / bin_size),
+                    title="Distribusi Harga (tanpa Outlier)",
+                    color_discrete_sequence=["#4a998f"]
+                )
+                fig.update_layout(
+                    xaxis_title="Harga",
+                    yaxis_title="Frekuensi",
+                    font=dict(color="white"),
+                    plot_bgcolor="black",
+                    paper_bgcolor="black"
+                )
+                st.plotly_chart(fig, use_container_width=True)
