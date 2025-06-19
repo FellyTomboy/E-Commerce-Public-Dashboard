@@ -86,11 +86,14 @@ def load_geojson(file_path):
 
 # Tab layout
 st.title('E-Commerce Public Dashboard')
-tab1, tab2, tab3 = st.tabs(["📦 Penjualan Bulanan", "🌍 Peta Konsumen", "📊 Statistik Produk"])
+tab1, tab2, tab3 = st.tabs(["📦 Penjualan Bulanan", "🌍 Penjualan Wilayah", "📊 Statistik Produk"])
 
-# ================= SIDEBAR =================
-with st.sidebar:
-    st.title('📊 Filter Setting')
+# ================= TAB 1: GRAFIK + FILTER =================
+with tab1:
+    st.title('📦 Penjualan Bulanan')
+
+    # Filter Setting
+    st.markdown("### 🔧 Filter")
     orders_final_dataset = orders_final_dataset.dropna(subset=['year'])
     orders_final_dataset['year'] = orders_final_dataset['year'].astype(int)
     year_list = sorted(orders_final_dataset['year'].unique(), reverse=True)
@@ -109,8 +112,6 @@ with st.sidebar:
         st.error("You can select up to 4 categories only. Please deselect some options.")
         st.stop()
 
-# ================= TAB 1: GRAFIK =================
-with tab1:
     with st.spinner('Memuat grafik penjualan kategori...'):
         st.markdown('### 📦 Items Sold Per Categories')
 
@@ -130,77 +131,81 @@ with tab1:
         color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
         st.bar_chart(chart_data, color=color_map)
         st.success("Grafik penjualan siap ditampilkan ✅")
-        
-        st.markdown("#### 📋 Cuplikan Data Order")
-        st.dataframe(orders_final_dataset.head(10))
-        
-# ================= TAB 2: MAP =================
+
+# ================= TAB 2: PENJUALAN WILAYAH =================
 with tab2:
-    with st.spinner('Memuat peta sebaran konsumen...'):
-        st.markdown("### 🌍 Peta Sebaran Konsumen")
+    st.title("📍 Penjualan Wilayah")
 
-        # Load GeoJSON
-        geojson_data = load_geojson("br.json")
+    geojson_data = load_geojson("br.json")
 
-        # Buat mapping dari properties.id → properties.name
-        id_to_name = {
-            feature["properties"]["id"]: feature["properties"]["name"]
-            for feature in geojson_data["features"]
-            if "id" in feature["properties"] and "name" in feature["properties"]
-        }
+    # mapping kode state → nama lengkap
+    id_to_name = {
+        feature["properties"]["id"]: feature["properties"]["name"]
+        for feature in geojson_data["features"]
+        if "id" in feature["properties"] and "name" in feature["properties"]
+    }
 
-        # Hitung jumlah konsumen per state
-        state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+    state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+    state_counts['state_name'] = state_counts['customer_state'].map(id_to_name).fillna(state_counts['customer_state'])
 
-        # Tambahkan nama state untuk hover (jika tidak cocok, fallback ke kode)
-        state_counts['state_name'] = state_counts['customer_state'].map(id_to_name).fillna(state_counts['customer_state'])
+    # Peta interaktif dengan event click
+    fig = px.choropleth(
+        state_counts,
+        geojson=geojson_data,
+        locations="customer_state",
+        featureidkey="properties.id",
+        color="count",
+        color_continuous_scale="Tealgrn",
+        range_color=(0, state_counts["count"].max()),
+        hover_name="state_name",
+        labels={"count": "Jumlah Konsumen"}
+    )
+    fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="black",
+        plot_bgcolor="black",
+        coloraxis_showscale=False,  # nonaktifkan bar warna
+        geo=dict(
+            showframe=False,
+            showcoastlines=False,
+            showland=True,
+            landcolor='black',
+            countrycolor='white',
+            subunitcolor='white'
+        ),
+        margin={"r":0,"t":0,"l":0,"b":0}
+    )
 
-        # Tampilkan jumlah negara bagian yang cocok
-        st.write("📌 Jumlah Negara Bagian Terdeteksi:", len(state_counts))
+    selected_state = st.selectbox("Klik negara bagian:", state_counts['customer_state'].sort_values())
+    st.plotly_chart(fig, use_container_width=True)
 
-        # Buat peta choropleth
-        fig = px.choropleth(
-            state_counts,
-            geojson=geojson_data,
-            locations="customer_state",
-            featureidkey="properties.id",  # <- sesuaikan dengan struktur br.json
-            color="count",
-            color_continuous_scale="Tealgrn",
-            range_color=(0, state_counts["count"].max()),
-            hover_name="state_name",
-            labels={"count": "Jumlah Konsumen"}
-        )
+    # Filter dataset berdasarkan klik state
+    state_filtered = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
 
-        # Zoom otomatis berdasarkan lokasi data
-        fig.update_geos(
-            fitbounds="locations",
-            visible=False,
-            bgcolor="black"
-        )
+    # METRIK
+    colm1, colm2 = st.columns(2)
+    with colm1:
+        max_price = state_filtered['price'].max()
+        st.metric("💰 Harga Tertinggi", f"R$ {max_price:,.2f}")
 
-        # Layout tampilan
-        fig.update_layout(
-            template="plotly_dark",
-            paper_bgcolor="black",
-            plot_bgcolor="black",
-            geo=dict(
-                showframe=False,
-                showcoastlines=False,
-                showland=True,
-                landcolor='black',
-                countrycolor='white',
-                subunitcolor='white'
-            ),
-            margin={"r": 0, "t": 0, "l": 0, "b": 0}
-        )
+    with colm2:
+        max_delivery = state_filtered['delivery_time'].max()
+        st.metric("🚚 Pengiriman Terlama", f"{max_delivery} hari")
 
-        # Tampilkan peta
-        st.plotly_chart(fig, use_container_width=True)
-        st.success("Peta berhasil dimuat ✅")
+    # TABEL 1: Top kota
+    top_cities = customers_final_dataset[customers_final_dataset['customer_state'] == selected_state]
+    city_counts = top_cities['customer_city'].value_counts().reset_index()
+    city_counts.columns = ['Kota', 'Jumlah Customer']
+    st.markdown("#### 🏙️ Top 5 Kota dengan Customer Terbanyak")
+    st.dataframe(city_counts.head(5))
 
-        # Preview data untuk debugging
-        st.markdown("#### 📋 Cuplikan Data Konsumen")
-        st.dataframe(customers_final_dataset.head(10))
+    # TABEL 2: Top kategori
+    top_categories = state_filtered['product_category_name'].value_counts().reset_index()
+    top_categories.columns = ['Kategori Produk', 'Jumlah Terjual']
+    st.markdown("#### 📦 Top 5 Kategori Produk Terjual")
+    st.dataframe(top_categories.head(5))
+
 
 # ================= TAB 3: TOP KATEGORI & HARGA =================
 with tab3:
