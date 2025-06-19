@@ -203,7 +203,7 @@ with tab3:
             if data.empty:
                 st.warning("Data harga tidak tersedia.")
             else:
-                bin_size = 50
+                bin_size = 30
                 nbins = int((data.max() - data.min()) / bin_size)
 
                 fig = px.histogram(
