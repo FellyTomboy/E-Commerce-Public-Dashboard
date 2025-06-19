@@ -213,47 +213,47 @@ with tab3:
         top_categories = category_count.head(10)
         st.table(top_categories)
     
-with col2:
-    with st.spinner('Menghitung distribusi harga...'):
-        st.markdown('### 💸 Distribusi Harga')
-        data = orders_final_dataset['price'].dropna()
-
-        if data.empty:
-            st.warning("Data harga tidak tersedia.")
-        else:
-            bin_size = 20
-            price_min = int(data.min())
-            price_max = int(data.max())
-            bin_edges = list(range(price_min, price_max + bin_size, bin_size))
-
-            df = pd.DataFrame({'price': data})
-            df['price_bin'] = pd.cut(df['price'], bins=bin_edges)
-
-            # Hitung frekuensi per bin
-            bin_df = df.groupby('price_bin').size().reset_index(name='count')
-            bin_df['bin_start'] = bin_df['price_bin'].apply(lambda x: int(x.left))
-            bin_df['bin_end'] = bin_df['price_bin'].apply(lambda x: int(x.right))
-            bin_df['range_label'] = bin_df['bin_start'].astype(str) + ' - ' + bin_df['bin_end'].astype(str)
-
-            chart = alt.Chart(bin_df).mark_bar(
-                color='#4a998f',
-                stroke='white',
-                strokeWidth=1
-            ).encode(
-                x=alt.X('range_label:N', title='Harga', sort=None),
-                y=alt.Y('count:Q', title='Frekuensi'),
-                tooltip=['range_label:N', 'count:Q']
-            ).properties(
-                width='container',
-                height=400,
-            ).configure_view(
-                stroke=None
-            ).configure_axis(
-                labelColor='white',
-                titleColor='white'
-            ).configure_title(
-                color='white'
-            ).configure(background='black')
-
-            st.altair_chart(chart, use_container_width=True)
-            st.success("Distribusi harga selesai ✅")
+    with col2:
+        with st.spinner('Menghitung distribusi harga...'):
+            st.markdown('### 💸 Distribusi Harga')
+            data = orders_final_dataset['price'].dropna()
+    
+            if data.empty:
+                st.warning("Data harga tidak tersedia.")
+            else:
+                bin_size = 20
+                price_min = int(data.min())
+                price_max = int(data.max())
+                bin_edges = list(range(price_min, price_max + bin_size, bin_size))
+    
+                df = pd.DataFrame({'price': data})
+                df['price_bin'] = pd.cut(df['price'], bins=bin_edges)
+    
+                # Hitung frekuensi per bin
+                bin_df = df.groupby('price_bin').size().reset_index(name='count')
+                bin_df['bin_start'] = bin_df['price_bin'].apply(lambda x: int(x.left))
+                bin_df['bin_end'] = bin_df['price_bin'].apply(lambda x: int(x.right))
+                bin_df['range_label'] = bin_df['bin_start'].astype(str) + ' - ' + bin_df['bin_end'].astype(str)
+    
+                chart = alt.Chart(bin_df).mark_bar(
+                    color='#4a998f',
+                    stroke='white',
+                    strokeWidth=1
+                ).encode(
+                    x=alt.X('range_label:N', title='Harga', sort=None),
+                    y=alt.Y('count:Q', title='Frekuensi'),
+                    tooltip=['range_label:N', 'count:Q']
+                ).properties(
+                    height=400,
+                    title='Distribusi Harga (bin size = 20)'
+                ).configure_view(
+                    stroke=None
+                ).configure_axis(
+                    labelColor='white',
+                    titleColor='white'
+                ).configure_title(
+                    color='white'
+                ).configure(background='black')
+    
+                st.altair_chart(chart, use_container_width=True)
+                st.success("Distribusi harga selesai ✅")
