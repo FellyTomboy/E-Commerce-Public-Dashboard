@@ -172,6 +172,9 @@ with tab2:
         )
         st.plotly_chart(fig, use_container_width=True)
         st.success("Peta berhasil dimuat ✅")
+        st.markdown("#### 📋 Cuplikan Data Konsumen")
+        st.dataframe(customers_final_dataset.head(10))
+
 
 
 # ================= TAB 3: TOP KATEGORI & HARGA =================
