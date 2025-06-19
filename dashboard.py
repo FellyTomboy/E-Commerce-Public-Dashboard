@@ -130,9 +130,10 @@ with tab1:
         color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
         st.bar_chart(chart_data, color=color_map)
         st.success("Grafik penjualan siap ditampilkan ✅")
-
-
-# ================= TAB 2: MAP =================
+        
+        st.markdown("#### 📋 Cuplikan Data Order")
+        st.dataframe(orders_final_dataset.head(10))
+        
 # ================= TAB 2: MAP =================
 with tab2:
     with st.spinner('Memuat peta sebaran konsumen...'):
