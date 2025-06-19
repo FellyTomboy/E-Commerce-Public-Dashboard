@@ -148,7 +148,7 @@ with tab2:
             state_counts,
             geojson=geojson_data,
             locations="customer_state",
-            featureidkey="properties.id",
+            featureidkey="id",
             color="count",
             color_continuous_scale="Tealgrn",
             range_color=(0, state_counts["count"].max()),
