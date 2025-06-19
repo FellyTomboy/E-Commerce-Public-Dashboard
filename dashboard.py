@@ -112,7 +112,6 @@ with st.sidebar:
 # ================= TAB 1: GRAFIK =================
 with tab1:
     with st.spinner('Memuat grafik penjualan kategori...'):
-        progress_bar = st.progress(0)
         st.markdown('### 📦 Items Sold Per Categories')
 
         selected_data = orders_final_dataset[
@@ -121,18 +120,15 @@ with tab1:
             (orders_final_dataset['order_status'] == 'delivered') &
             (orders_final_dataset['product_category_name'].isin(category))
         ]
-        progress_bar.progress(40)
 
         monthly_selected_category = selected_data.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
         monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
         monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
         chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
-        progress_bar.progress(80)
 
         colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
         color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
         st.bar_chart(chart_data, color=color_map)
-        progress_bar.progress(100)
         st.success("Grafik penjualan siap ditampilkan ✅")
 
 
@@ -140,16 +136,13 @@ with tab1:
 with tab2:
     with st.spinner('Memuat peta sebaran konsumen...'):
         st.markdown("### 🌍 Peta Sebaran Konsumen")
-        progress_bar = st.progress(0)
 
         geojson_data = load_geojson("br.json")
-        progress_bar.progress(30)
 
         state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
         state_counts['state_name'] = state_counts['customer_state'].map({
             feature["id"]: feature["properties"]["name"] for feature in geojson_data["features"]
         })
-        progress_bar.progress(60)
 
         fig = px.choropleth(
             state_counts,
@@ -177,7 +170,6 @@ with tab2:
             ),
             margin={"r":0,"t":0,"l":0,"b":0}
         )
-        progress_bar.progress(100)
         st.plotly_chart(fig, use_container_width=True)
         st.success("Peta berhasil dimuat ✅")
 
@@ -193,40 +185,34 @@ with tab3:
         top_categories = category_count.head(10)
         st.table(top_categories)
     
-    with col2:
-        with st.spinner('Menghitung distribusi harga...'):
-            progress_bar = st.progress(10)
-            st.markdown('### 💸 Distribusi Harga')
-            data = orders_final_dataset['price'].dropna()
-            progress_bar.progress(30)
-    
-            if data.empty:
-                st.warning("Data harga tidak tersedia.")
-            else:
-                # Tentukan ukuran bin 20
-                bin_size = 20
-                price_min = int(data.min())
-                price_max = int(data.max())
-    
-                # Buat list bin edges dari min ke max
-                bin_edges = list(range(price_min, price_max + bin_size, bin_size))
-                progress_bar.progress(60)
-    
-                fig = px.histogram(
-                    orders_final_dataset,
-                    x="price",
-                    nbins=len(bin_edges)-1,
-                    title="Distribusi Harga (bin size = 20)",
-                    color_discrete_sequence=["#4a998f"]
-                )
-    
-                fig.update_layout(
-                    xaxis_title="Harga",
-                    yaxis_title="Frekuensi",
-                    font=dict(color="white"),
-                    plot_bgcolor="black",
-                    paper_bgcolor="black"
-                )
-                progress_bar.progress(100)
-                st.plotly_chart(fig, use_container_width=True)
-                st.success("Distribusi harga selesai ✅")
+with col2:
+    with st.spinner('Menghitung distribusi harga...'):
+        st.markdown('### 💸 Distribusi Harga')
+        data = orders_final_dataset['price'].dropna()
+
+        if data.empty:
+            st.warning("Data harga tidak tersedia.")
+        else:
+            bin_size = 20
+            price_min = int(data.min())
+            price_max = int(data.max())
+            bin_edges = list(range(price_min, price_max + bin_size, bin_size))
+
+            fig = px.histogram(
+                orders_final_dataset,
+                x="price",
+                nbins=len(bin_edges)-1,
+                title="Distribusi Harga (bin size = 20)",
+                color_discrete_sequence=["#4a998f"]
+            )
+            fig.update_traces(marker_line_color="white", marker_line_width=1)
+
+            fig.update_layout(
+                xaxis_title="Harga",
+                yaxis_title="Frekuensi",
+                font=dict(color="white"),
+                plot_bgcolor="black",
+                paper_bgcolor="black"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+            st.success("Distribusi harga selesai ✅")
