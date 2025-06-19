@@ -141,20 +141,20 @@ with tab2:
         # Load GeoJSON
         geojson_data = load_geojson("br.json")
 
-        # Salin ID ke properties
-        for feature in geojson_data["features"]:
-            feature["properties"]["id"] = feature["id"]
-
-        # Buat mapping id → name dari geojson
+        # Buat mapping dari properties.id → properties.name
         id_to_name = {
-            feature["id"]: feature["properties"]["name"]
+            feature["properties"]["id"]: feature["properties"]["name"]
             for feature in geojson_data["features"]
+            if "id" in feature["properties"] and "name" in feature["properties"]
         }
 
         # Hitung jumlah konsumen per state
         state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+
+        # Tambahkan nama state untuk hover (jika tidak cocok, fallback ke kode)
         state_counts['state_name'] = state_counts['customer_state'].map(id_to_name).fillna(state_counts['customer_state'])
 
+        # Tampilkan jumlah negara bagian yang cocok
         st.write("📌 Jumlah Negara Bagian Terdeteksi:", len(state_counts))
 
         # Buat peta choropleth
@@ -162,7 +162,7 @@ with tab2:
             state_counts,
             geojson=geojson_data,
             locations="customer_state",
-            featureidkey="properties.id",  # ✅ Perbaikan di sini
+            featureidkey="properties.id",  # <- sesuaikan dengan struktur br.json
             color="count",
             color_continuous_scale="Tealgrn",
             range_color=(0, state_counts["count"].max()),
@@ -170,7 +170,14 @@ with tab2:
             labels={"count": "Jumlah Konsumen"}
         )
 
-        fig.update_geos(fitbounds="geojson", visible=False, bgcolor="black")
+        # Zoom otomatis berdasarkan lokasi data
+        fig.update_geos(
+            fitbounds="locations",
+            visible=False,
+            bgcolor="black"
+        )
+
+        # Layout tampilan
         fig.update_layout(
             template="plotly_dark",
             paper_bgcolor="black",
@@ -183,11 +190,16 @@ with tab2:
                 countrycolor='white',
                 subunitcolor='white'
             ),
-            margin={"r":0,"t":0,"l":0,"b":0}
+            margin={"r": 0, "t": 0, "l": 0, "b": 0}
         )
 
+        # Tampilkan peta
         st.plotly_chart(fig, use_container_width=True)
         st.success("Peta berhasil dimuat ✅")
+
+        # Preview data untuk debugging
+        st.markdown("#### 📋 Cuplikan Data Konsumen")
+        st.dataframe(customers_final_dataset.head(10))
 
 # ================= TAB 3: TOP KATEGORI & HARGA =================
 with tab3:
