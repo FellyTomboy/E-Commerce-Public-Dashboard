@@ -226,22 +226,35 @@ with col2:
             price_max = int(data.max())
             bin_edges = list(range(price_min, price_max + bin_size, bin_size))
 
-            fig = px.histogram(
-                pd.DataFrame({"price": data}),
-                x="price",
-                nbins=len(bin_edges) - 1,
-                title="Distribusi Harga (bin size = 20)",
-                color_discrete_sequence=["#4a998f"],
-                histfunc="count"
-            )
-            fig.update_traces(marker_line_color="white", marker_line_width=1)
+            df = pd.DataFrame({'price': data})
+            df['price_bin'] = pd.cut(df['price'], bins=bin_edges)
 
-            fig.update_layout(
-                xaxis_title="Harga",
-                yaxis_title="Frekuensi",
-                font=dict(color="white"),
-                plot_bgcolor="black",
-                paper_bgcolor="black"
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            # Hitung frekuensi per bin
+            bin_df = df.groupby('price_bin').size().reset_index(name='count')
+            bin_df['bin_start'] = bin_df['price_bin'].apply(lambda x: int(x.left))
+            bin_df['bin_end'] = bin_df['price_bin'].apply(lambda x: int(x.right))
+            bin_df['range_label'] = bin_df['bin_start'].astype(str) + ' - ' + bin_df['bin_end'].astype(str)
+
+            chart = alt.Chart(bin_df).mark_bar(
+                color='#4a998f',
+                stroke='white',
+                strokeWidth=1
+            ).encode(
+                x=alt.X('range_label:N', title='Harga', sort=None),
+                y=alt.Y('count:Q', title='Frekuensi'),
+                tooltip=['range_label:N', 'count:Q']
+            ).properties(
+                width='container',
+                height=400,
+                title='Distribusi Harga (bin size = 20)'
+            ).configure_view(
+                stroke=None
+            ).configure_axis(
+                labelColor='white',
+                titleColor='white'
+            ).configure_title(
+                color='white'
+            ).configure(background='black')
+
+            st.altair_chart(chart, use_container_width=True)
             st.success("Distribusi harga selesai ✅")
