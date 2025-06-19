@@ -7,6 +7,8 @@ import plotly.express as px
 from pathlib import Path
 import json
 import zipfile
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+
 
 # Streamlit Configuration
 st.set_page_config(
@@ -114,7 +116,7 @@ with tab1:
             st.error("You can select up to 4 categories only. Please deselect some options.")
             st.stop()
     with col_graph:
-        with st.spinner('Memuat grafik penjualan kategori...'):
+        with st.spinner('Loading category sales chart...'):
             st.markdown('### 📦 Items Sold Per Categories')
     
             selected_data = orders_final_dataset[
@@ -132,26 +134,41 @@ with tab1:
             colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
             color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
             st.bar_chart(chart_data, color=color_map)
+            st.success("Sales chart is ready ✅")
+    
+            # 🔥 Top 5 Selling Cities
+            st.markdown("### 🏙️ Top 5 Cities with Most Sales")
+            top_city = selected_data.groupby(['customer_city', 'customer_state']).size().reset_index(name='total_items_sold')
+            top_city = top_city.sort_values('total_items_sold', ascending=False).head(5)
+            top_city['city_state'] = top_city['customer_city'] + ", " + top_city['customer_state']
+    
+            gb = GridOptionsBuilder.from_dataframe(top_city[['city_state', 'total_items_sold']])
+            gb.configure_selection(selection_mode='single', use_checkbox=True)
+            grid_options = gb.build()
+    
+            grid_response = AgGrid(
+                top_city[['city_state', 'total_items_sold']],
+                gridOptions=grid_options,
+                update_mode=GridUpdateMode.SELECTION_CHANGED,
+                height=300,
+                width='100%',
+                theme='alpine'
+            )
+    
+            selected_rows = grid_response['selected_rows']
+            if selected_rows:
+                selected_row = selected_rows[0]
+                selected_city = selected_row['city_state'].split(", ")[0]
+                selected_state = selected_row['city_state'].split(", ")[1]
+    
+                st.markdown(f"#### 📦 Product Details in **{selected_city}, {selected_state}**")
+                product_details = selected_data[
+                    (selected_data['customer_city'] == selected_city) &
+                    (selected_data['customer_state'] == selected_state)
+                ]['product_category_name'].value_counts().reset_index()
+                product_details.columns = ['Product Category', 'Total Sold']
+                st.dataframe(product_details, use_container_width=True)
 
-            st.markdown("### 🏙️ Top 5 Cities by Total Sales")
-
-            top_cities = selected_data.groupby(['customer_city', 'customer_state']).size().reset_index(name='total_items_sold')
-            top_cities = top_cities.sort_values('total_items_sold', ascending=False).head(5)
-            top_cities_display = top_cities.copy()
-            top_cities_display.columns = ['City', 'State', 'Total Items Sold']
-            selected_city = st.selectbox("Select a city to view product details:", top_cities_display['City'])
-    
-            st.dataframe(top_cities_display, use_container_width=True)
-    
-            # ==================== PRODUCT BREAKDOWN FOR SELECTED CITY ====================
-            st.markdown(f"### 📦 Product Breakdown for {selected_city}")
-    
-            # Pivot table of product counts by city
-            product_by_city = selected_data[selected_data['customer_city'] == selected_city]
-            product_counts = product_by_city['product_category_name'].value_counts().reset_index()
-            product_counts.columns = ['Product Category', 'Total Sold']
-    
-            st.table(product_counts)
 
 # ================= TAB 2: PENJUALAN WILAYAH =================
 with tab2:
