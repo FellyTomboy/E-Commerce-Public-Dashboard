@@ -28,7 +28,7 @@ if not geo_csv_path.exists() and geo_zip_path.exists():
 # Load Datasets
 @st.cache_data
 def load_data():
-    base_dir = Path(__file__).resolve().parent.parent
+    base_dir = Path(".")  # relatif dari file dashboard.py
     orders = pd.read_csv(base_dir / "data" / "orders_dataset.csv")
     products = pd.read_csv(base_dir / "data" / "products_dataset.csv")
     items = pd.read_csv(base_dir / "data" / "order_items_dataset.csv")
