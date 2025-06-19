@@ -173,17 +173,22 @@ with tab3:
 
     with col2:
         st.markdown('### 💸 Distribusi Harga')
-        fig, ax = plt.subplots(figsize=(10, 6))
-        fig.patch.set_alpha(0)
-        ax.patch.set_alpha(0)
-        data = orders_final_dataset['price']
-        n, bins, patches = ax.hist(data, bins=30, edgecolor='white', color='#4a998f')
-        ax.set_title('Distribusi Harga', color='white')
-        ax.set_xlabel('Harga', color='white')
-        ax.set_ylabel('Frekuensi', color='white')
-        for spine in ax.spines.values():
-            spine.set_edgecolor('white')
-        ax.tick_params(axis='both', colors='white')
-        for patch in patches:
-            patch.set_edgecolor('white')
-        st.pyplot(fig)
+        if orders_final_dataset['price'].dropna().empty:
+            st.warning("Data harga tidak tersedia.")
+        else:
+            fig = px.histogram(
+                orders_final_dataset,
+                x='price',
+                nbins=30,
+                title='Distribusi Harga',
+                color_discrete_sequence=['#4a998f']
+            )
+            fig.update_layout(
+                plot_bgcolor='black',
+                paper_bgcolor='black',
+                font=dict(color='white'),
+                xaxis=dict(title='Harga'),
+                yaxis=dict(title='Frekuensi')
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
