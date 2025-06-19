@@ -199,21 +199,27 @@ with tab3:
             st.markdown('### 💸 Distribusi Harga')
             data = orders_final_dataset['price'].dropna()
             progress_bar.progress(30)
-
+    
             if data.empty:
                 st.warning("Data harga tidak tersedia.")
             else:
-                bin_size = 30
-                nbins = int((data.max() - data.min()) / bin_size)
+                # Tentukan ukuran bin 20
+                bin_size = 20
+                price_min = int(data.min())
+                price_max = int(data.max())
+    
+                # Buat list bin edges dari min ke max
+                bin_edges = list(range(price_min, price_max + bin_size, bin_size))
                 progress_bar.progress(60)
-
+    
                 fig = px.histogram(
                     orders_final_dataset,
                     x="price",
-                    nbins=nbins,
-                    title="Distribusi Harga",
+                    nbins=len(bin_edges)-1,
+                    title="Distribusi Harga (bin size = 20)",
                     color_discrete_sequence=["#4a998f"]
                 )
+    
                 fig.update_layout(
                     xaxis_title="Harga",
                     yaxis_title="Frekuensi",
