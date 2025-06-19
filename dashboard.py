@@ -49,6 +49,20 @@ def load_data():
 # Load data
 orders_final_dataset, customers_final_dataset = load_data()
 
+# Hapus outlier harga dari awal
+q1 = orders_final_dataset['price'].quantile(0.25)
+q3 = orders_final_dataset['price'].quantile(0.75)
+iqr = q3 - q1
+lower_bound = q1 - 1.5 * iqr
+upper_bound = q3 + 1.5 * iqr
+orders_final_dataset = orders_final_dataset[
+    (orders_final_dataset['price'] >= lower_bound) & 
+    (orders_final_dataset['price'] <= upper_bound)
+]
+
+# Bersihkan missing values pada customers_final_dataset
+customers_final_dataset.dropna(inplace=True)
+
 # Pembersihan dan fitur turunan seperti sebelumnya
 orders_final_dataset['order_delivered_carrier_date'] = pd.to_datetime(orders_final_dataset['order_delivered_carrier_date'])
 orders_final_dataset['order_estimated_delivery_date'] = pd.to_datetime(orders_final_dataset['order_estimated_delivery_date'])
@@ -178,33 +192,21 @@ with tab3:
         if data.empty:
             st.warning("Data harga tidak tersedia.")
         else:
-            # Hapus outlier dengan metode IQR
-            q1 = data.quantile(0.25)
-            q3 = data.quantile(0.75)
-            iqr = q3 - q1
-            lower_bound = q1 - 1.5 * iqr
-            upper_bound = q3 + 1.5 * iqr
-            filtered_data = data[(data >= lower_bound) & (data <= upper_bound)]
+            bin_size = 50
+            nbins = int((data.max() - data.min()) / bin_size)
     
-            if filtered_data.empty:
-                st.warning("Tidak ada data harga yang tersisa setelah menghapus outlier.")
-            else:
-                # Tetapkan bin size manual agar rentang antar bins lebar (misal 50)
-                bin_size = 50
-                nbins = int((filtered_data.max() - filtered_data.min()) / bin_size)
-    
-                fig = px.histogram(
-                    filtered_data,
-                    x=filtered_data,
-                    nbins=nbins,
-                    title="Distribusi Harga (tanpa Outlier)",
-                    color_discrete_sequence=["#4a998f"]
-                )
-                fig.update_layout(
-                    xaxis_title="Harga",
-                    yaxis_title="Frekuensi",
-                    font=dict(color="white"),
-                    plot_bgcolor="black",
-                    paper_bgcolor="black"
-                )
-                st.plotly_chart(fig, use_container_width=True)
+            fig = px.histogram(
+                data,
+                x=data,
+                nbins=nbins,
+                title="Distribusi Harga",
+                color_discrete_sequence=["#4a998f"]
+            )
+            fig.update_layout(
+                xaxis_title="Harga",
+                yaxis_title="Frekuensi",
+                font=dict(color="white"),
+                plot_bgcolor="black",
+                paper_bgcolor="black"
+            )
+            st.plotly_chart(fig, use_container_width=True)
