@@ -92,119 +92,125 @@ tab1, tab2, tab3 = st.tabs(["📦 Penjualan Bulanan", "🌍 Penjualan Wilayah", 
 with tab1:
     st.title('📦 Penjualan Bulanan')
 
-    # Filter Setting
-    st.markdown("### 🔧 Filter")
-    orders_final_dataset = orders_final_dataset.dropna(subset=['year'])
-    orders_final_dataset['year'] = orders_final_dataset['year'].astype(int)
-    year_list = sorted(orders_final_dataset['year'].unique(), reverse=True)
-    selected_year = st.selectbox('Select a year', year_list, index=year_list.index(2018))
-
-    values = st.slider('Select month range', 1, 12, (1, 12))
-    month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agust', 'Sept', 'Okt', 'Nov', 'Des']
-    selected_labels = month_labels[values[0]-1:values[1]]
-
-    category = st.multiselect(
-        label="Category Product (Max 3)",
-        options=sorted(orders_final_dataset['product_category_name'].unique()),
-        default=['cama_mesa_banho', 'beleza_saude', 'esporte_lazer', 'moveis_decoracao']
-    )
-    if len(category) > 4:
-        st.error("You can select up to 4 categories only. Please deselect some options.")
-        st.stop()
-
-    with st.spinner('Memuat grafik penjualan kategori...'):
-        st.markdown('### 📦 Items Sold Per Categories')
-
-        selected_data = orders_final_dataset[
-            (orders_final_dataset['year'] == selected_year) &
-            (orders_final_dataset['month'].between(values[0], values[1])) &
-            (orders_final_dataset['order_status'] == 'delivered') &
-            (orders_final_dataset['product_category_name'].isin(category))
-        ]
-
-        monthly_selected_category = selected_data.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
-        monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
-        monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
-        chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
-
-        colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
-        color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
-        st.bar_chart(chart_data, color=color_map)
-        st.success("Grafik penjualan siap ditampilkan ✅")
+    with col_filter:
+        # Filter Setting
+        st.markdown("### 🔧 Filter")
+        orders_final_dataset = orders_final_dataset.dropna(subset=['year'])
+        orders_final_dataset['year'] = orders_final_dataset['year'].astype(int)
+        year_list = sorted(orders_final_dataset['year'].unique(), reverse=True)
+        selected_year = st.selectbox('Select a year', year_list, index=year_list.index(2018))
+    
+        values = st.slider('Select month range', 1, 12, (1, 12))
+        month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agust', 'Sept', 'Okt', 'Nov', 'Des']
+        selected_labels = month_labels[values[0]-1:values[1]]
+    
+        category = st.multiselect(
+            label="Category Product (Max 3)",
+            options=sorted(orders_final_dataset['product_category_name'].unique()),
+            default=['cama_mesa_banho', 'beleza_saude', 'esporte_lazer', 'moveis_decoracao']
+        )
+        if len(category) > 4:
+            st.error("You can select up to 4 categories only. Please deselect some options.")
+            st.stop()
+    with col_graph:
+        with st.spinner('Memuat grafik penjualan kategori...'):
+            st.markdown('### 📦 Items Sold Per Categories')
+    
+            selected_data = orders_final_dataset[
+                (orders_final_dataset['year'] == selected_year) &
+                (orders_final_dataset['month'].between(values[0], values[1])) &
+                (orders_final_dataset['order_status'] == 'delivered') &
+                (orders_final_dataset['product_category_name'].isin(category))
+            ]
+    
+            monthly_selected_category = selected_data.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
+            monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
+            monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
+            chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
+    
+            colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
+            color_map = colors[:len(category)] + [colors[-1]] * (len(category) - len(colors))
+            st.bar_chart(chart_data, color=color_map)
+            st.success("Grafik penjualan siap ditampilkan ✅")
 
 # ================= TAB 2: PENJUALAN WILAYAH =================
 with tab2:
-    st.title("📍 Penjualan Wilayah")
+    st.markdown("### 🌍 Penjualan Wilayah")
 
     geojson_data = load_geojson("br.json")
 
-    # mapping kode state → nama lengkap
-    id_to_name = {
-        feature["properties"]["id"]: feature["properties"]["name"]
-        for feature in geojson_data["features"]
-        if "id" in feature["properties"] and "name" in feature["properties"]
-    }
+    # Mapping kode ↔ nama state
+    id_to_name = {f["properties"]["id"]: f["properties"]["name"] for f in geojson_data["features"]}
+    name_to_id = {v: k for k, v in id_to_name.items()}
 
-    state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
-    state_counts['state_name'] = state_counts['customer_state'].map(id_to_name).fillna(state_counts['customer_state'])
+    # Dropdown nama wilayah
+    all_states = sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique())
+    selected_state_name = st.selectbox("Pilih negara bagian:", all_states)
+    selected_state = name_to_id[selected_state_name]
 
-    # Peta interaktif dengan event click
-    fig = px.choropleth(
-        state_counts,
-        geojson=geojson_data,
-        locations="customer_state",
-        featureidkey="properties.id",
-        color="count",
-        color_continuous_scale="Tealgrn",
-        range_color=(0, state_counts["count"].max()),
-        hover_name="state_name",
-        labels={"count": "Jumlah Konsumen"}
-    )
-    fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
-    fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="black",
-        plot_bgcolor="black",
-        coloraxis_showscale=False,  # nonaktifkan bar warna
-        geo=dict(
-            showframe=False,
-            showcoastlines=False,
-            showland=True,
-            landcolor='black',
-            countrycolor='white',
-            subunitcolor='white'
-        ),
-        margin={"r":0,"t":0,"l":0,"b":0}
-    )
+    # Layout peta kiri, metrik+tabel kanan
+    col_map, col_info = st.columns([3, 2])
 
-    selected_state = st.selectbox("Klik negara bagian:", state_counts['customer_state'].sort_values())
-    st.plotly_chart(fig, use_container_width=True)
+    with col_map:
+        state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+        state_counts['state_name'] = state_counts['customer_state'].map(id_to_name)
 
-    # Filter dataset berdasarkan klik state
-    state_filtered = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
+        fig = px.choropleth(
+            state_counts,
+            geojson=geojson_data,
+            locations="customer_state",
+            featureidkey="properties.id",
+            color="count",
+            color_continuous_scale="Tealgrn",
+            range_color=(0, state_counts["count"].max()),
+            hover_name="state_name",
+            labels={"count": "Jumlah Konsumen"}
+        )
+        fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="black",
+            plot_bgcolor="black",
+            coloraxis_showscale=False,
+            geo=dict(
+                showframe=False,
+                showcoastlines=False,
+                showland=True,
+                landcolor='black',
+                countrycolor='white',
+                subunitcolor='white'
+            ),
+            margin={"r": 0, "t": 0, "l": 0, "b": 0}
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-    # METRIK
-    colm1, colm2 = st.columns(2)
-    with colm1:
-        max_price = state_filtered['price'].max()
-        st.metric("💰 Harga Tertinggi", f"R$ {max_price:,.2f}")
+    with col_info:
+        st.markdown(f"#### 🧭 Analisis untuk: {selected_state_name}")
 
-    with colm2:
-        max_delivery = state_filtered['delivery_time'].max()
-        st.metric("🚚 Pengiriman Terlama", f"{max_delivery} hari")
+        state_filtered = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
+        top_customers = customers_final_dataset[customers_final_dataset['customer_state'] == selected_state]
 
-    # TABEL 1: Top kota
-    top_cities = customers_final_dataset[customers_final_dataset['customer_state'] == selected_state]
-    city_counts = top_cities['customer_city'].value_counts().reset_index()
-    city_counts.columns = ['Kota', 'Jumlah Customer']
-    st.markdown("#### 🏙️ Top 5 Kota dengan Customer Terbanyak")
-    st.dataframe(city_counts.head(5))
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            max_price = state_filtered['price'].max()
+            st.metric("💰 Harga Tertinggi", f"R$ {max_price:,.2f}")
 
-    # TABEL 2: Top kategori
-    top_categories = state_filtered['product_category_name'].value_counts().reset_index()
-    top_categories.columns = ['Kategori Produk', 'Jumlah Terjual']
-    st.markdown("#### 📦 Top 5 Kategori Produk Terjual")
-    st.dataframe(top_categories.head(5))
+        with col_m2:
+            max_delivery = state_filtered['delivery_time'].max()
+            st.metric("📦 Waktu Delivery Terlama", f"{max_delivery} hari")
+
+        # Tabel Kota
+        city_counts = top_customers['customer_city'].value_counts().reset_index()
+        city_counts.columns = ['Kota', 'Jumlah Konsumen']
+        st.markdown("##### 🏙️ Top 5 Kota")
+        st.dataframe(city_counts.head(5), use_container_width=True)
+
+        # Tabel Kategori
+        top_categories = state_filtered['product_category_name'].value_counts().reset_index()
+        top_categories.columns = ['Kategori Produk', 'Jumlah Terjual']
+        st.markdown("##### 🛍️ Top 5 Kategori Produk Terjual")
+        st.dataframe(top_categories.head(5), use_container_width=True)
+
 
 
 # ================= TAB 3: TOP KATEGORI & HARGA =================
