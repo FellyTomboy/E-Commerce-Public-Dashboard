@@ -56,7 +56,7 @@ id_to_name = {f["properties"]["id"]: f["properties"]["name"] for f in geojson_da
 name_to_id = {v: k for k, v in id_to_name.items()}
 
 st.markdown("""
-    <h1 style='font-size: 30px;'>📊 E-Commerce Public Dashboard</h1>
+    <h1 style='font-size: 35px;'>📊 E-Commerce Public Dashboard</h1>
 """, unsafe_allow_html=True)
 
 col_wilayah, col_bulanan = st.columns([1, 1])
@@ -101,10 +101,11 @@ with col_wilayah:
                 st.metric("💰 Pembelian Termahal", f"R$ {state_data['price'].max():,.2f}")
             with col2:
                 st.metric("📦 Pengiriman Terlama", f"{state_data['delivery_time'].max()} hari")
-        st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
-        top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
-        top5_cities.columns = ['Kota', 'Jumlah Konsumen']
-        st.dataframe(top5_cities, use_container_width=True)
+        with st.container(border=True):
+            st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
+            top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
+            top5_cities.columns = ['Kota', 'Jumlah Konsumen']
+            st.dataframe(top5_cities, use_container_width=True)
 
     with st.container(border=True):
         top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
@@ -133,7 +134,7 @@ with col_bulanan:
                 (orders_final_dataset['order_status'] == 'delivered') &
                 (orders_final_dataset['product_category_name'].isin(selected_categories))
             ]
-
+        with st.container(border=True):
             top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
             top_cities.columns = ['City', 'Total Items Sold']
             st.markdown("<h5>🏙️ Top 5 Cities by Total Sales</h5>", unsafe_allow_html=True)
