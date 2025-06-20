@@ -152,13 +152,13 @@ with col_bulanan:
             colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
             color_map = colors[:len(selected_categories)] + [colors[-1]] * (len(selected_categories) - len(colors))
             st.bar_chart(chart_data, use_container_width=True, color=color_map)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("💰 Pembelian Termahal", f"R$ {filtered['price'].max():,.2f}")
-        with col2:
-            st.metric("📦 Pengiriman Terlama", f"{filtered['delivery_time'].max()} hari")
-
+        with st.container(border=True):
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("💰 Pembelian Termahal", f"R$ {filtered['price'].max():,.2f}")
+            with col2:
+                st.metric("📦 Pengiriman Terlama", f"{filtered['delivery_time'].max()} hari")
+    
         selected_city = st.selectbox("Pilih Kota untuk lihat detail produk:", top_cities['City'])
 
     with st.container(border=True):
