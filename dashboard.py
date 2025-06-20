@@ -57,7 +57,7 @@ name_to_id = {v: k for k, v in id_to_name.items()}
 
 st.title("📊 E-Commerce Public Dashboard")
 
-col_wilayah, col_bulanan = st.columns([2, 3])
+col_wilayah, col_bulanan = st.columns([1, 1])
 
 with col_wilayah:
     col_peta = st.container()
@@ -76,7 +76,14 @@ with col_wilayah:
             labels={"count": "Jumlah Konsumen"}
         )
         fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
-        fig.update_layout(template="plotly_dark", paper_bgcolor="black", plot_bgcolor="black")
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="black",
+            plot_bgcolor="black",
+            coloraxis_showscale=False,
+            margin=dict(l=0, r=0, t=0, b=0),
+            height=280
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     col_negarabagian = st.container()
