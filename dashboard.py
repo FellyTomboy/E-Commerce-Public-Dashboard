@@ -107,6 +107,7 @@ with col_bulanan:
     with col_filter:
         selected_year = st.selectbox('Tahun:', sorted(orders_final_dataset['year'].unique(), reverse=True))
         selected_months = st.slider('Rentang Bulan', 1, 12, (1, 12))
+        month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agust', 'Sept', 'Okt', 'Nov', 'Des']
         selected_categories = st.multiselect(
             "Kategori Produk (maks. 4):",
             sorted(orders_final_dataset['product_category_name'].unique()),
@@ -117,6 +118,7 @@ with col_bulanan:
         filtered = orders_final_dataset[
             (orders_final_dataset['year'] == selected_year) &
             (orders_final_dataset['month'].between(*selected_months)) &
+            (orders_final_dataset['order_status'] == 'delivered') &
             (orders_final_dataset['product_category_name'].isin(selected_categories))
         ]
 
@@ -126,13 +128,16 @@ with col_bulanan:
         st.dataframe(top_cities, use_container_width=True)
 
     with col_grafikmetrik:
-        st.markdown("### 📦 Items Sold per Categories")
-        summary = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='count')
-        summary['month'] = summary['month'].astype(str)
-        fig = px.bar(summary, x='month', y='count', color='product_category_name', barmode='group',
-                     template='plotly_dark', labels={'count': 'Items Sold', 'month': 'Month'})
-        fig.update_layout(paper_bgcolor="black", plot_bgcolor="black")
-        st.plotly_chart(fig, use_container_width=True)
+        with st.spinner('Loading category sales chart...'):
+            st.markdown('### 📦 Items Sold Per Categories')
+            monthly_selected_category = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
+            monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
+            monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
+            chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
+
+            colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
+            color_map = colors[:len(selected_categories)] + [colors[-1]] * (len(selected_categories) - len(colors))
+            st.bar_chart(chart_data, color=color_map)
 
         col_pembeliantermahal, col_pengirimanterlama = st.columns(2)
         with col_pembeliantermahal:
