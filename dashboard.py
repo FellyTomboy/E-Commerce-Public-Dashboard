@@ -108,11 +108,11 @@ with col_wilayah:
             top5_cities.columns = ['Kota', 'Jumlah Konsumen']
             st.dataframe(top5_cities, use_container_width=True)
 
-        with st.container(border=True):
-            top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
-            top_products.columns = ['Produk', 'Jumlah Terjual']
-            st.markdown("<h5>🛍️ 5 Produk Terjual Terbanyak</h5>", unsafe_allow_html=True)
-            st.dataframe(top_products, use_container_width=True)
+    with st.container(border=True):
+        top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
+        top_products.columns = ['Produk', 'Jumlah Terjual']
+        st.markdown("<h5>🛍️ 5 Produk Terjual Terbanyak</h5>", unsafe_allow_html=True)
+        st.dataframe(top_products, use_container_width=True)
 
 with col_bulanan:
     col_filter, col_grafik = st.columns([1, 2])
