@@ -92,21 +92,19 @@ with col_wilayah:
             st.plotly_chart(fig, use_container_width=False)
 
     with col_keterangan:
+        selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
+        selected_state = name_to_id[selected_state_name]
+        state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
         with st.container(border=True):
-            selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
-            selected_state = name_to_id[selected_state_name]
-            state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
-
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("💰 Pembelian Termahal", f"R$ {state_data['price'].max():,.2f}")
             with col2:
                 st.metric("📦 Pengiriman Terlama", f"{state_data['delivery_time'].max()} hari")
-
-            st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
-            top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
-            top5_cities.columns = ['Kota', 'Jumlah Konsumen']
-            st.dataframe(top5_cities, use_container_width=True)
+        st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
+        top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
+        top5_cities.columns = ['Kota', 'Jumlah Konsumen']
+        st.dataframe(top5_cities, use_container_width=True)
 
     with st.container(border=True):
         top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
