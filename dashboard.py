@@ -56,62 +56,66 @@ id_to_name = {f["properties"]["id"]: f["properties"]["name"] for f in geojson_da
 name_to_id = {v: k for k, v in id_to_name.items()}
 
 st.markdown("""
-    <h1 style='font-size: 35px;'>📊 E-Commerce Public Dashboard</h1>
+    <h1 style='font-size: 45px;'>📊 E-Commerce Public Dashboard</h1>
 """, unsafe_allow_html=True)
 
 col_wilayah, col_bulanan = st.columns([1, 1])
 
 with col_wilayah:
-    col_peta, col_keterangan = st.columns([1, 2])
-
-    with col_peta:
-        with st.container(border=True):
-            state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
-            state_counts['state_name'] = state_counts['customer_state'].map(id_to_name)
-            fig = px.choropleth(
-                state_counts,
-                geojson=geojson_data,
-                locations="customer_state",
-                featureidkey="properties.id",
-                color="count",
-                color_continuous_scale="Tealgrn",
-                range_color=(0, state_counts["count"].max()),
-                hover_name="state_name",
-                labels={"count": "Jumlah Konsumen"}
-            )
-            fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
-            fig.update_layout(
-                template="plotly_dark",
-                paper_bgcolor="black",
-                plot_bgcolor="black",
-                coloraxis_showscale=False,
-                margin=dict(l=0, r=0, t=0, b=0),
-                height=250,
-                width=300
-            )
-            st.plotly_chart(fig, use_container_width=False)
-
-    with col_keterangan:
-        selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
-        selected_state = name_to_id[selected_state_name]
-        state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
-        with st.container(border=True):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("💰 Pembelian Termahal", f"R$ {state_data['price'].max():,.2f}")
-            with col2:
-                st.metric("📦 Pengiriman Terlama", f"{state_data['delivery_time'].max()} hari")
-        with st.container(border=True):
-            st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
-            top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
-            top5_cities.columns = ['Kota', 'Jumlah Konsumen']
-            st.dataframe(top5_cities, use_container_width=True)
-
     with st.container(border=True):
-        top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
-        top_products.columns = ['Produk', 'Jumlah Terjual']
-        st.markdown("<h5>🛍️ 5 Produk Terjual Terbanyak</h5>", unsafe_allow_html=True)
-        st.dataframe(top_products, use_container_width=True)
+        st.markdown("""
+            <h2 style='font-size: 35px;align-items:center'>Penjualan Wilayah</h1>
+        """, unsafe_allow_html=True)
+        col_peta, col_keterangan = st.columns([1, 2])
+    
+        with col_peta:
+            with st.container(border=True):
+                state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+                state_counts['state_name'] = state_counts['customer_state'].map(id_to_name)
+                fig = px.choropleth(
+                    state_counts,
+                    geojson=geojson_data,
+                    locations="customer_state",
+                    featureidkey="properties.id",
+                    color="count",
+                    color_continuous_scale="Tealgrn",
+                    range_color=(0, state_counts["count"].max()),
+                    hover_name="state_name",
+                    labels={"count": "Jumlah Konsumen"}
+                )
+                fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
+                fig.update_layout(
+                    template="plotly_dark",
+                    paper_bgcolor="black",
+                    plot_bgcolor="black",
+                    coloraxis_showscale=False,
+                    margin=dict(l=0, r=0, t=0, b=0),
+                    height=250,
+                    width=300
+                )
+                st.plotly_chart(fig, use_container_width=False)
+    
+        with col_keterangan:
+            selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
+            selected_state = name_to_id[selected_state_name]
+            state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
+            with st.container(border=True):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("💰 Pembelian Termahal", f"R$ {state_data['price'].max():,.2f}")
+                with col2:
+                    st.metric("📦 Pengiriman Terlama", f"{state_data['delivery_time'].max()} hari")
+            with st.container(border=True):
+                st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
+                top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
+                top5_cities.columns = ['Kota', 'Jumlah Konsumen']
+                st.dataframe(top5_cities, use_container_width=True)
+    
+        with st.container(border=True):
+            top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
+            top_products.columns = ['Produk', 'Jumlah Terjual']
+            st.markdown("<h5>🛍️ 5 Produk Terjual Terbanyak</h5>", unsafe_allow_html=True)
+            st.dataframe(top_products, use_container_width=True)
 
 with col_bulanan:
     col_filter, col_grafik = st.columns([1, 2])
