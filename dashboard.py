@@ -64,7 +64,7 @@ col_wilayah, col_bulanan = st.columns([1, 1])
 with col_wilayah:
     with st.container(border=True):
         st.markdown("""
-            <h2 style='font-size: 35px;align-items:center'>Penjualan Wilayah</h1>
+            <h2 style='font-size: 35px;text-align: center;'>Penjualan Wilayah</h1>
         """, unsafe_allow_html=True)
         col_peta, col_keterangan = st.columns([1, 2])
     
@@ -118,54 +118,58 @@ with col_wilayah:
             st.dataframe(top_products, use_container_width=True)
 
 with col_bulanan:
-    col_filter, col_grafik = st.columns([1, 2])
-
-    with col_filter:
-        with st.container(border=True):
-            selected_year = st.selectbox('Tahun:', sorted(orders_final_dataset['year'].unique(), reverse=True))
-            selected_months = st.slider('Rentang Bulan', 1, 12, (1, 12))
-            month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agust', 'Sept', 'Okt', 'Nov', 'Des']
-            selected_categories = st.multiselect(
-                "Kategori Produk (maks. 4):",
-                sorted(orders_final_dataset['product_category_name'].unique()),
-                default=['cama_mesa_banho', 'beleza_saude'],
-                max_selections=4
-            )
-
-            filtered = orders_final_dataset[
-                (orders_final_dataset['year'] == selected_year) &
-                (orders_final_dataset['month'].between(*selected_months)) &
-                (orders_final_dataset['order_status'] == 'delivered') &
-                (orders_final_dataset['product_category_name'].isin(selected_categories))
-            ]
-        with st.container(border=True):
-            top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
-            top_cities.columns = ['City', 'Total Items Sold']
-            st.markdown("<h5>🏙️ Top 5 Cities by Total Sales</h5>", unsafe_allow_html=True)
-            st.dataframe(top_cities, use_container_width=True)
-
-    with col_grafik:
-        with st.container(border=True):
-            st.markdown("<h5>📦 Items Sold Per Categories</h5>", unsafe_allow_html=True)
-            monthly_selected_category = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
-            monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
-            monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
-            chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
-
-            colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
-            color_map = colors[:len(selected_categories)] + [colors[-1]] * (len(selected_categories) - len(colors))
-            st.bar_chart(chart_data, use_container_width=True, color=color_map)
-        with st.container(border=True):
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("💰 Pembelian Termahal", f"R$ {filtered['price'].max():,.2f}")
-            with col2:
-                st.metric("📦 Pengiriman Terlama", f"{filtered['delivery_time'].max()} hari")
-    
-        selected_city = st.selectbox("Pilih Kota untuk lihat detail produk:", top_cities['City'])
-
     with st.container(border=True):
-        st.markdown(f"<h5>📦 Detail Produk - {selected_city}</h5>", unsafe_allow_html=True)
-        detail = filtered[filtered['customer_city'] == selected_city]['product_category_name'].value_counts().reset_index()
-        detail.columns = ['Kategori', 'Jumlah Terjual']
-        st.dataframe(detail, use_container_width=True)
+        st.markdown("""
+            <h2 style='font-size: 35px;text-align: center;'>Penjualan Bulanan</h1>
+        """, unsafe_allow_html=True)
+        col_filter, col_grafik = st.columns([1, 2])
+    
+        with col_filter:
+            with st.container(border=True):
+                selected_year = st.selectbox('Tahun:', sorted(orders_final_dataset['year'].unique(), reverse=True))
+                selected_months = st.slider('Rentang Bulan', 1, 12, (1, 12))
+                month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agust', 'Sept', 'Okt', 'Nov', 'Des']
+                selected_categories = st.multiselect(
+                    "Kategori Produk (maks. 4):",
+                    sorted(orders_final_dataset['product_category_name'].unique()),
+                    default=['cama_mesa_banho', 'beleza_saude'],
+                    max_selections=4
+                )
+    
+                filtered = orders_final_dataset[
+                    (orders_final_dataset['year'] == selected_year) &
+                    (orders_final_dataset['month'].between(*selected_months)) &
+                    (orders_final_dataset['order_status'] == 'delivered') &
+                    (orders_final_dataset['product_category_name'].isin(selected_categories))
+                ]
+            with st.container(border=True):
+                top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
+                top_cities.columns = ['City', 'Total Items Sold']
+                st.markdown("<h5>🏙️ Top 5 Cities by Total Sales</h5>", unsafe_allow_html=True)
+                st.dataframe(top_cities, use_container_width=True)
+    
+        with col_grafik:
+            with st.container(border=True):
+                st.markdown("<h5>📦 Items Sold Per Categories</h5>", unsafe_allow_html=True)
+                monthly_selected_category = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
+                monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
+                monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
+                chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
+    
+                colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
+                color_map = colors[:len(selected_categories)] + [colors[-1]] * (len(selected_categories) - len(colors))
+                st.bar_chart(chart_data, use_container_width=True, color=color_map)
+            with st.container(border=True):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("💰 Pembelian Termahal", f"R$ {filtered['price'].max():,.2f}")
+                with col2:
+                    st.metric("📦 Pengiriman Terlama", f"{filtered['delivery_time'].max()} hari")
+        
+            selected_city = st.selectbox("Pilih Kota untuk lihat detail produk:", top_cities['City'])
+    
+        with st.container(border=True):
+            st.markdown(f"<h5>📦 Detail Produk - {selected_city}</h5>", unsafe_allow_html=True)
+            detail = filtered[filtered['customer_city'] == selected_city]['product_category_name'].value_counts().reset_index()
+            detail.columns = ['Kategori', 'Jumlah Terjual']
+            st.dataframe(detail, use_container_width=True)
