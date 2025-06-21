@@ -102,9 +102,11 @@ with col_wilayah:
             with st.container(border=True):
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("💰 Pembelian Termahal", f"R$ {state_data['price'].max():,.2f}")
+                    avg_price = state_data['price'].mean()
+                    st.metric("🛒 Rata-rata Harga", f"R$ {avg_price:.2f}")
                 with col2:
-                    st.metric("📦 Pengiriman Terlama", f"{state_data['delivery_time'].max()} hari")
+                    avg_delivery = state_data['delivery_time'].mean()
+                    st.metric("⏱️ Rata-rata Pengiriman", f"{avg_delivery:.1f} hari")
             with st.container(border=True):
                 st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
                 top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
@@ -162,10 +164,11 @@ with col_bulanan:
             with st.container(border=True):
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("💰 Pembelian Termahal", f"R$ {filtered['price'].max():,.2f}")
+                    avg_price = filtered['price'].mean()
+                    st.metric("🛒 Rata-rata Harga", f"R$ {avg_price:.2f}")
                 with col2:
-                    st.metric("📦 Pengiriman Terlama", f"{filtered['delivery_time'].max()} hari")
-        
+                    avg_delivery = filtered['delivery_time'].mean()
+                    st.metric("⏱️ Rata-rata Pengiriman", f"{avg_delivery:.1f} hari")
             selected_city = st.selectbox("Pilih Kota untuk lihat detail produk:", top_cities['City'])
     
         with st.container(border=True):
