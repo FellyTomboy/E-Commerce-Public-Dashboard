@@ -123,16 +123,10 @@ with col_wilayah:
                         names='Waktu',
                         values='Jumlah',
                         color='Waktu',
-                        color_discrete_map={
-                            'Pagi': '#00cc96',
-                            'Siang': '#636efa',
-                            'Sore': '#ab63fa',
-                            'Malam': '#EF553B'
-                        },
-                        hole=0.4
+                        hole=0
                     )
                     pie_chart.update_layout(
-                        title_text="🕒 Distribusi Waktu Pembelian",
+                        title_text="Waktu Beli",
                         template="plotly_dark",
                         paper_bgcolor="black"
                     )
