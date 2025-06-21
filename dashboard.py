@@ -123,15 +123,24 @@ with col_wilayah:
                         names='Waktu',
                         values='Jumlah',
                         color='Waktu',
-                        hole=0
+                        hole=0,
                     )
+                    
+                    pie_chart.update_traces(
+                        textinfo='label+percent',  # Tampilkan label dan persentase di dalam chart
+                        textposition='inside',     # Letakkan label di dalam potongan pie
+                        hovertemplate='%{value} (%{percent})<extra></extra>'  # Hover hanya nilai dan persen
+                    )
+                    
                     pie_chart.update_layout(
                         title_text="Waktu Beli",
+                        showlegend=False,           # Hilangkan legenda
                         template="plotly_dark",
-                        paper_bgcolor="black"
+                        paper_bgcolor="black",
+                        margin=dict(t=30, b=0, l=0, r=0)  # Perkecil margin atas/bawah/kiri/kanan
                     )
+                    
                     st.plotly_chart(pie_chart, use_container_width=True)
-    
         with col_keterangan:
             with st.container(border=True):
                 col1, col2 = st.columns(2)
