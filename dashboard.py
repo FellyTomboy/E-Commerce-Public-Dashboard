@@ -66,6 +66,9 @@ with col_wilayah:
         st.markdown("""
             <h2 style='font-size: 35px;text-align: center;'>Penjualan Wilayah</h1>
         """, unsafe_allow_html=True)
+        selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
+        selected_state = name_to_id[selected_state_name]
+        state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
         col_peta, col_keterangan = st.columns([1, 2])
     
         with col_peta:
@@ -96,9 +99,6 @@ with col_wilayah:
                 st.plotly_chart(fig, use_container_width=False)
     
         with col_keterangan:
-            selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
-            selected_state = name_to_id[selected_state_name]
-            state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
             with st.container(border=True):
                 col1, col2 = st.columns(2)
                 with col1:
