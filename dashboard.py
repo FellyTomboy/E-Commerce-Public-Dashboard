@@ -97,6 +97,11 @@ with col_wilayah:
                     width=300
                 )
                 st.plotly_chart(fig, use_container_width=False)
+                
+            with st.container(border=True):
+                state_data['weekday'] = state_data['order_purchase_timestamp'].dt.day_name()
+                top_day = state_data['weekday'].value_counts().idxmax()
+                st.metric("📆 Hari Tersibuk", top_day)
 
         with col_keterangan:
             with st.container(border=True):
