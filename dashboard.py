@@ -153,13 +153,13 @@ with col_wilayah:
                 st.markdown("<h5>🏙️ 5 Kota Konsumen Terbanyak</h5>", unsafe_allow_html=True)
                 top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
                 top5_cities.columns = ['Kota', 'Jumlah Konsumen']
-                st.dataframe(top5_cities, use_container_width=True)
+                st.dataframe(top5_cities, use_container_width=True, hide_index=True)
     
         with st.container(border=True):
             top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
             top_products.columns = ['Produk', 'Jumlah Terjual']
             st.markdown("<h5>🛍️ 5 Produk Terjual Terbanyak</h5>", unsafe_allow_html=True)
-            st.dataframe(top_products, use_container_width=True)
+            st.dataframe(top_products, use_container_width=True, hide_index=True)
 
 with col_bulanan:
     with st.container(border=True):
@@ -190,7 +190,7 @@ with col_bulanan:
                 top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
                 top_cities.columns = ['City', 'Total Items Sold']
                 st.markdown("<h5>🏙️ Top 5 Cities by Total Sales</h5>", unsafe_allow_html=True)
-                st.dataframe(top_cities, use_container_width=True)
+                st.dataframe(top_cities, use_container_width=True, hide_index=True)
     
         with col_grafik:
             with st.container(border=True):
@@ -216,4 +216,4 @@ with col_bulanan:
             st.markdown(f"<h5>📦 Detail Produk - {selected_city}</h5>", unsafe_allow_html=True)
             detail = filtered[filtered['customer_city'] == selected_city]['product_category_name'].value_counts().reset_index()
             detail.columns = ['Kategori', 'Jumlah Terjual']
-            st.dataframe(detail, use_container_width=True)
+            st.dataframe(detail, use_container_width=True, hide_index=True)
