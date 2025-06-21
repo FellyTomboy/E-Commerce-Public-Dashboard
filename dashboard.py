@@ -98,50 +98,6 @@ with col_wilayah:
                 )
                 st.plotly_chart(fig, use_container_width=False)
 
-            with st.container(border=True):
-                if not state_data.empty and 'order_purchase_timestamp' in state_data.columns:
-                    # Pastikan kolom timestamp bertipe datetime
-                    state_data['order_purchase_timestamp'] = pd.to_datetime(state_data['order_purchase_timestamp'])
-            
-                    # Kategorikan waktu dalam hari
-                    def get_time_of_day(hour):
-                        if 5 <= hour < 12:
-                            return 'Pagi'
-                        elif 12 <= hour < 17:
-                            return 'Siang'
-                        elif 17 <= hour < 21:
-                            return 'Sore'
-                        else:
-                            return 'Malam'
-            
-                    state_data['waktu_beli'] = state_data['order_purchase_timestamp'].dt.hour.apply(get_time_of_day)
-                    pie_data = state_data['waktu_beli'].value_counts().reset_index()
-                    pie_data.columns = ['Waktu', 'Jumlah']
-                                
-                    pie_chart = px.pie(
-                        pie_data,
-                        names='Waktu',
-                        values='Jumlah',
-                        color='Waktu',
-                        hole=0,
-                    )
-                    
-                    pie_chart.update_traces(
-                        textinfo='label+percent',
-                        textposition='inside',
-                        hovertemplate='%{value} (%{percent})<extra></extra>'
-                    )
-                    
-                    pie_chart.update_layout(
-                        title_text=None,  # Hapus judul agar tidak makan ruang vertikal
-                        showlegend=False,
-                        template="plotly_dark",
-                        paper_bgcolor="black",
-                        height=250,  # Atur tinggi grafik agar tidak terlalu besar
-                        margin=dict(t=10, b=10, l=10, r=10)  # Margin sangat tipis
-                    )
-                    
-                    st.plotly_chart(pie_chart, use_container_width=True)
         with col_keterangan:
             with st.container(border=True):
                 col1, col2 = st.columns(2)
