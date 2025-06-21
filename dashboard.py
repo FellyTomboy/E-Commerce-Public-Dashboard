@@ -1,5 +1,9 @@
+# E-Commerce Dashboard dengan struktur sesuai permintaan dan kotak tiap komponen
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import altair as alt
 import plotly.express as px
 import json
 from pathlib import Path
@@ -11,18 +15,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-
-# 👉 Tambahkan CSS untuk menghilangkan padding
-st.markdown("""
-    <style>
-        .block-container {
-            padding-left: 1rem;
-            padding-right: 1rem;
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 @st.cache_data
 def load_data():
@@ -63,20 +55,23 @@ geojson_data = load_geojson("br.json")
 id_to_name = {f["properties"]["id"]: f["properties"]["name"] for f in geojson_data["features"]}
 name_to_id = {v: k for k, v in id_to_name.items()}
 
-st.markdown("<h1 style='font-size: 45px;'>📊 E-Commerce Public Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("""
+    <h1 style='font-size: 45px;'>📊 E-Commerce Public Dashboard</h1>
+""", unsafe_allow_html=True)
 
-col_region, col_monthly = st.columns([1.15, 1.15])  # Lebarkan kolom
+col_wilayah, col_bulanan = st.columns([1, 1])
 
-# ------------------------- Regional Sales -------------------------
-with col_region:
+with col_wilayah:
     with st.container(border=True):
-        st.markdown("<h2 style='font-size: 32px;text-align: center;'>Regional Sales</h2>", unsafe_allow_html=True)
+        st.markdown("""
+            <h2 style='font-size: 35px;text-align: center;'>Regional Sales</h2>
+        """, unsafe_allow_html=True)
         selected_state_name = st.selectbox("Select State:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
         selected_state = name_to_id[selected_state_name]
         state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
-        col_map, col_info = st.columns([1, 2])
+        col_peta, col_keterangan = st.columns([1, 2])
 
-        with col_map:
+        with col_peta:
             with st.container(border=True):
                 state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
                 state_counts['state_name'] = state_counts['customer_state'].map(id_to_name)
@@ -108,7 +103,7 @@ with col_region:
                 top_day = state_data['weekday'].value_counts().idxmax()
                 st.metric("📆 Busiest Day", top_day)
 
-        with col_info:
+        with col_keterangan:
             with st.container(border=True):
                 col1, col2 = st.columns(2)
                 with col1:
@@ -117,28 +112,38 @@ with col_region:
                 with col2:
                     avg_delivery = state_data['delivery_time'].mean()
                     st.metric("⏱️ Avg. Delivery", f"{avg_delivery:.1f} days")
+
             with st.container(border=True):
                 st.markdown("<h5>🏙️ Top 5 Cities by Customers</h5>", unsafe_allow_html=True)
                 top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
                 top5_cities.columns = ['City', 'Customer Count']
-                st.dataframe(top5_cities, use_container_width=True, hide_index=True)
+                if st.toggle("Show Chart", key="chart_cities_customers"):
+                    fig = px.bar(top5_cities, x='Customer Count', y='City', orientation='h', color='Customer Count', color_continuous_scale='Tealgrn')
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.dataframe(top5_cities, use_container_width=True, hide_index=True)
 
         with st.container(border=True):
             st.markdown("<h5>🛍️ Top 5 Sold Products</h5>", unsafe_allow_html=True)
             top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
             top_products.columns = ['Product', 'Items Sold']
-            st.dataframe(top_products, use_container_width=True, hide_index=True)
+            if st.toggle("Show Chart", key="chart_top_products"):
+                fig = px.bar(top_products, x='Items Sold', y='Product', orientation='h', color='Items Sold', color_continuous_scale='Tealgrn')
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.dataframe(top_products, use_container_width=True, hide_index=True)
 
-# ------------------------- Monthly Sales -------------------------
-with col_monthly:
+with col_bulanan:
     with st.container(border=True):
-        st.markdown("<h2 style='font-size: 32px;text-align: center;'>Monthly Sales</h2>", unsafe_allow_html=True)
-        col_filter, col_graph = st.columns([1, 2])
+        st.markdown("""
+            <h2 style='font-size: 35px;text-align: center;'>Monthly Sales</h2>
+        """, unsafe_allow_html=True)
+        col_filter, col_grafik = st.columns([1, 2])
 
         with col_filter:
             with st.container(border=True):
-                selected_year = st.selectbox("Year:", sorted(orders_final_dataset['year'].unique(), reverse=True))
-                selected_months = st.slider("Month Range", 1, 12, (1, 12))
+                selected_year = st.selectbox('Year:', sorted(orders_final_dataset['year'].unique(), reverse=True))
+                selected_months = st.slider('Month Range', 1, 12, (1, 12))
                 month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                 selected_categories = st.multiselect(
                     "Product Categories (max. 4):",
@@ -146,6 +151,7 @@ with col_monthly:
                     default=['cama_mesa_banho', 'beleza_saude'],
                     max_selections=4
                 )
+
                 filtered = orders_final_dataset[
                     (orders_final_dataset['year'] == selected_year) &
                     (orders_final_dataset['month'].between(*selected_months)) &
@@ -154,19 +160,25 @@ with col_monthly:
                 ]
 
             with st.container(border=True):
-                st.markdown("<h5>🏙️ Top 5 Cities by Sales</h5>", unsafe_allow_html=True)
                 top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
                 top_cities.columns = ['City', 'Total Items Sold']
-                st.dataframe(top_cities, use_container_width=True, hide_index=True)
+                if st.toggle("Show Chart", key="chart_top_sales"):
+                    fig = px.bar(top_cities, x='Total Items Sold', y='City', orientation='h', color='Total Items Sold', color_continuous_scale='Tealgrn')
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.dataframe(top_cities, use_container_width=True, hide_index=True)
 
-        with col_graph:
+        with col_grafik:
             with st.container(border=True):
                 st.markdown("<h5>📦 Items Sold per Category</h5>", unsafe_allow_html=True)
-                monthly_data = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
-                monthly_data['month'] = monthly_data['month'].apply(lambda x: month_labels[x - 1])
-                monthly_data['month'] = pd.Categorical(monthly_data['month'], categories=month_labels, ordered=True)
-                chart_data = monthly_data.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
-                st.bar_chart(chart_data, use_container_width=True)
+                monthly_selected_category = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
+                monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
+                monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
+                chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
+
+                colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
+                color_map = colors[:len(selected_categories)] + [colors[-1]] * (len(selected_categories) - len(colors))
+                st.bar_chart(chart_data, use_container_width=True, color=color_map)
 
             with st.container(border=True):
                 col1, col2 = st.columns(2)
@@ -183,4 +195,8 @@ with col_monthly:
             st.markdown(f"<h5>📦 Product Details – {selected_city}</h5>", unsafe_allow_html=True)
             detail = filtered[filtered['customer_city'] == selected_city]['product_category_name'].value_counts().reset_index()
             detail.columns = ['Category', 'Items Sold']
-            st.dataframe(detail, use_container_width=True, hide_index=True)
+            if st.toggle("Show Chart", key="chart_detail_products"):
+                fig = px.bar(detail, x='Items Sold', y='Category', orientation='h', color='Items Sold', color_continuous_scale='Tealgrn')
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.dataframe(detail, use_container_width=True, hide_index=True)
