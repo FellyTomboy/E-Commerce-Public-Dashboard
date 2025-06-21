@@ -118,8 +118,12 @@ with col_wilayah:
                 top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
                 top5_cities.columns = ['City', 'Customer Count']
                 if st.toggle("Show Chart", key="chart_cities_customers"):
-                    fig = px.bar(top5_cities, x='Customer Count', y='City', orientation='h', color='Customer Count', color_continuous_scale='Tealgrn')
-                    st.plotly_chart(fig, use_container_width=True)
+                    chart = alt.Chart(top5_cities).mark_bar().encode(
+                        x='Customer Count:Q',
+                        y=alt.Y('City:N', sort='-x'),
+                        color=alt.value('#2c7e8c')
+                    ).properties(width='container')
+                    st.altair_chart(chart, use_container_width=True)
                 else:
                     st.dataframe(top5_cities, use_container_width=True, hide_index=True)
 
