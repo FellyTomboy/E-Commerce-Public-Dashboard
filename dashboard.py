@@ -68,32 +68,72 @@ with col_wilayah:
         """, unsafe_allow_html=True)
         col_peta, col_keterangan = st.columns([1, 2])
     
-        with col_peta:
-            with st.container(border=True):
-                state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
-                state_counts['state_name'] = state_counts['customer_state'].map(id_to_name)
-                fig = px.choropleth(
-                    state_counts,
-                    geojson=geojson_data,
-                    locations="customer_state",
-                    featureidkey="properties.id",
-                    color="count",
-                    color_continuous_scale="Tealgrn",
-                    range_color=(0, state_counts["count"].max()),
-                    hover_name="state_name",
-                    labels={"count": "Jumlah Konsumen"}
-                )
-                fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
-                fig.update_layout(
-                    template="plotly_dark",
-                    paper_bgcolor="black",
-                    plot_bgcolor="black",
-                    coloraxis_showscale=False,
-                    margin=dict(l=0, r=0, t=0, b=0),
-                    height=250,
-                    width=300
-                )
-                st.plotly_chart(fig, use_container_width=False)
+    with col_peta:
+        with st.container(border=True):
+            state_counts = customers_final_dataset.groupby("customer_state").size().reset_index(name="count")
+            state_counts['state_name'] = state_counts['customer_state'].map(id_to_name)
+            fig = px.choropleth(
+                state_counts,
+                geojson=geojson_data,
+                locations="customer_state",
+                featureidkey="properties.id",
+                color="count",
+                color_continuous_scale="Tealgrn",
+                range_color=(0, state_counts["count"].max()),
+                hover_name="state_name",
+                labels={"count": "Jumlah Konsumen"}
+            )
+            fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
+            fig.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="black",
+                plot_bgcolor="black",
+                coloraxis_showscale=False,
+                margin=dict(l=0, r=0, t=0, b=0),
+                height=250,
+                width=300
+            )
+            st.plotly_chart(fig, use_container_width=False)
+    
+        # Tambahan: Pie Chart waktu pembelian
+        if not state_data.empty and 'order_purchase_timestamp' in state_data.columns:
+            # Pastikan kolom timestamp bertipe datetime
+            state_data['order_purchase_timestamp'] = pd.to_datetime(state_data['order_purchase_timestamp'])
+    
+            # Kategorikan waktu dalam hari
+            def get_time_of_day(hour):
+                if 5 <= hour < 12:
+                    return 'Pagi'
+                elif 12 <= hour < 17:
+                    return 'Siang'
+                elif 17 <= hour < 21:
+                    return 'Sore'
+                else:
+                    return 'Malam'
+    
+            state_data['waktu_beli'] = state_data['order_purchase_timestamp'].dt.hour.apply(get_time_of_day)
+            pie_data = state_data['waktu_beli'].value_counts().reset_index()
+            pie_data.columns = ['Waktu', 'Jumlah']
+    
+            pie_chart = px.pie(
+                pie_data,
+                names='Waktu',
+                values='Jumlah',
+                color='Waktu',
+                color_discrete_map={
+                    'Pagi': '#00cc96',
+                    'Siang': '#636efa',
+                    'Sore': '#ab63fa',
+                    'Malam': '#EF553B'
+                },
+                hole=0.4
+            )
+            pie_chart.update_layout(
+                title_text="🕒 Distribusi Waktu Pembelian",
+                template="plotly_dark",
+                paper_bgcolor="black"
+            )
+            st.plotly_chart(pie_chart, use_container_width=True)
     
         with col_keterangan:
             selected_state_name = st.selectbox("Pilih Negara Bagian:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
