@@ -121,7 +121,7 @@ with col_wilayah:
                     chart = alt.Chart(top5_cities).mark_bar().encode(
                         x='Customer Count:Q',
                         y=alt.Y('City:N', sort='-x'),
-                        color=alt.value('#2c7e8c')
+                        color=alt.value('#4A998F')
                     ).properties(width='container')
                     st.altair_chart(chart, use_container_width=True)
                 else:
