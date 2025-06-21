@@ -1,9 +1,5 @@
-# E-Commerce Dashboard with box layout and English labels
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-import altair as alt
 import plotly.express as px
 import json
 from pathlib import Path
@@ -15,6 +11,18 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# 👉 Tambahkan CSS untuk menghilangkan padding
+st.markdown("""
+    <style>
+        .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 @st.cache_data
 def load_data():
@@ -55,17 +63,14 @@ geojson_data = load_geojson("br.json")
 id_to_name = {f["properties"]["id"]: f["properties"]["name"] for f in geojson_data["features"]}
 name_to_id = {v: k for k, v in id_to_name.items()}
 
-st.markdown("""
-    <h1 style='font-size: 45px;'>📊 E-Commerce Public Dashboard</h1>
-""", unsafe_allow_html=True)
+st.markdown("<h1 style='font-size: 45px;'>📊 E-Commerce Public Dashboard</h1>", unsafe_allow_html=True)
 
-col_region, col_monthly = st.columns([1, 1])
+col_region, col_monthly = st.columns([1.15, 1.15])  # Lebarkan kolom
 
+# ------------------------- Regional Sales -------------------------
 with col_region:
     with st.container(border=True):
-        st.markdown("""
-            <h2 style='font-size: 35px;text-align: center;'>Regional Sales</h2>
-        """, unsafe_allow_html=True)
+        st.markdown("<h2 style='font-size: 32px;text-align: center;'>Regional Sales</h2>", unsafe_allow_html=True)
         selected_state_name = st.selectbox("Select State:", sorted(customers_final_dataset['customer_state'].map(id_to_name).dropna().unique()))
         selected_state = name_to_id[selected_state_name]
         state_data = orders_final_dataset[orders_final_dataset['customer_state'] == selected_state]
@@ -84,7 +89,7 @@ with col_region:
                     color_continuous_scale="Tealgrn",
                     range_color=(0, state_counts["count"].max()),
                     hover_name="state_name",
-                    labels={"count": "Number of Customers"}
+                    labels={"count": "Customer Count"}
                 )
                 fig.update_geos(fitbounds="locations", visible=False, bgcolor="black")
                 fig.update_layout(
@@ -101,7 +106,7 @@ with col_region:
             with st.container(border=True):
                 state_data['weekday'] = state_data['order_purchase_timestamp'].dt.day_name()
                 top_day = state_data['weekday'].value_counts().idxmax()
-                st.metric("🗖️ Busiest Day", top_day)
+                st.metric("📆 Busiest Day", top_day)
 
         with col_info:
             with st.container(border=True):
@@ -113,28 +118,27 @@ with col_region:
                     avg_delivery = state_data['delivery_time'].mean()
                     st.metric("⏱️ Avg. Delivery", f"{avg_delivery:.1f} days")
             with st.container(border=True):
-                st.markdown("<h5>🏠 Top 5 Cities by Customers</h5>", unsafe_allow_html=True)
+                st.markdown("<h5>🏙️ Top 5 Cities by Customers</h5>", unsafe_allow_html=True)
                 top5_cities = state_data['customer_city'].value_counts().head(5).reset_index()
                 top5_cities.columns = ['City', 'Customer Count']
                 st.dataframe(top5_cities, use_container_width=True, hide_index=True)
 
         with st.container(border=True):
+            st.markdown("<h5>🛍️ Top 5 Sold Products</h5>", unsafe_allow_html=True)
             top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
-            top_products.columns = ['Product', 'Units Sold']
-            st.markdown("<h5>🍬 Top 5 Products</h5>", unsafe_allow_html=True)
+            top_products.columns = ['Product', 'Items Sold']
             st.dataframe(top_products, use_container_width=True, hide_index=True)
 
+# ------------------------- Monthly Sales -------------------------
 with col_monthly:
     with st.container(border=True):
-        st.markdown("""
-            <h2 style='font-size: 35px;text-align: center;'>Monthly Sales</h2>
-        """, unsafe_allow_html=True)
-        col_filter, col_chart = st.columns([1, 2])
+        st.markdown("<h2 style='font-size: 32px;text-align: center;'>Monthly Sales</h2>", unsafe_allow_html=True)
+        col_filter, col_graph = st.columns([1, 2])
 
         with col_filter:
             with st.container(border=True):
-                selected_year = st.selectbox('Year:', sorted(orders_final_dataset['year'].unique(), reverse=True))
-                selected_months = st.slider('Month Range', 1, 12, (1, 12))
+                selected_year = st.selectbox("Year:", sorted(orders_final_dataset['year'].unique(), reverse=True))
+                selected_months = st.slider("Month Range", 1, 12, (1, 12))
                 month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                 selected_categories = st.multiselect(
                     "Product Categories (max. 4):",
@@ -142,30 +146,28 @@ with col_monthly:
                     default=['cama_mesa_banho', 'beleza_saude'],
                     max_selections=4
                 )
-
                 filtered = orders_final_dataset[
                     (orders_final_dataset['year'] == selected_year) &
                     (orders_final_dataset['month'].between(*selected_months)) &
                     (orders_final_dataset['order_status'] == 'delivered') &
                     (orders_final_dataset['product_category_name'].isin(selected_categories))
                 ]
+
             with st.container(border=True):
+                st.markdown("<h5>🏙️ Top 5 Cities by Sales</h5>", unsafe_allow_html=True)
                 top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
                 top_cities.columns = ['City', 'Total Items Sold']
-                st.markdown("<h5>🏠 Top 5 Cities by Total Sales</h5>", unsafe_allow_html=True)
                 st.dataframe(top_cities, use_container_width=True, hide_index=True)
 
-        with col_chart:
+        with col_graph:
             with st.container(border=True):
                 st.markdown("<h5>📦 Items Sold per Category</h5>", unsafe_allow_html=True)
-                monthly_selected_category = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
-                monthly_selected_category['month'] = monthly_selected_category['month'].apply(lambda x: month_labels[x-1])
-                monthly_selected_category['month'] = pd.Categorical(monthly_selected_category['month'], categories=month_labels, ordered=True)
-                chart_data = monthly_selected_category.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
+                monthly_data = filtered.groupby(['month', 'product_category_name']).size().reset_index(name='item_count')
+                monthly_data['month'] = monthly_data['month'].apply(lambda x: month_labels[x - 1])
+                monthly_data['month'] = pd.Categorical(monthly_data['month'], categories=month_labels, ordered=True)
+                chart_data = monthly_data.pivot(index='month', columns='product_category_name', values='item_count').fillna(0)
+                st.bar_chart(chart_data, use_container_width=True)
 
-                colors = ['#8bc091', '#4a998f', '#2c7e8c', '#1c6187', '#28417a']
-                color_map = colors[:len(selected_categories)] + [colors[-1]] * (len(selected_categories) - len(colors))
-                st.bar_chart(chart_data, use_container_width=True, color=color_map)
             with st.container(border=True):
                 col1, col2 = st.columns(2)
                 with col1:
@@ -174,10 +176,11 @@ with col_monthly:
                 with col2:
                     avg_delivery = filtered['delivery_time'].mean()
                     st.metric("⏱️ Avg. Delivery", f"{avg_delivery:.1f} days")
-            selected_city = st.selectbox("Select a City to view product details:", top_cities['City'])
+
+            selected_city = st.selectbox("Select City to view product details:", top_cities['City'])
 
         with st.container(border=True):
-            st.markdown(f"<h5>📦 Product Details - {selected_city}</h5>", unsafe_allow_html=True)
+            st.markdown(f"<h5>📦 Product Details – {selected_city}</h5>", unsafe_allow_html=True)
             detail = filtered[filtered['customer_city'] == selected_city]['product_category_name'].value_counts().reset_index()
-            detail.columns = ['Category', 'Units Sold']
+            detail.columns = ['Category', 'Items Sold']
             st.dataframe(detail, use_container_width=True, hide_index=True)
