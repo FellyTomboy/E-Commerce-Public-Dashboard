@@ -132,8 +132,13 @@ with col_wilayah:
             top_products = state_data['product_category_name'].value_counts().head(5).reset_index()
             top_products.columns = ['Product', 'Items Sold']
             if st.toggle("Show Chart", key="chart_top_products"):
-                fig = px.bar(top_products, x='Items Sold', y='Product', orientation='h', color='Items Sold', color_continuous_scale='Tealgrn')
-                st.plotly_chart(fig, use_container_width=True)
+                chart = alt.Chart(top_products).mark_bar().encode(
+                    x='Items Sold:Q',
+                    y=alt.Y('Product:N', sort='-x'),
+                    color=alt.value('#4A998F')
+                ).properties(width='container')
+                st.altair_chart(chart, use_container_width=True)
+
             else:
                 st.dataframe(top_products, use_container_width=True, hide_index=True)
 
@@ -167,8 +172,13 @@ with col_bulanan:
                 top_cities = filtered.groupby('customer_city').size().sort_values(ascending=False).head(5).reset_index()
                 top_cities.columns = ['City', 'Total Items Sold']
                 if st.toggle("Show Chart", key="chart_top_sales"):
-                    fig = px.bar(top_cities, x='Total Items Sold', y='City', orientation='h', color='Total Items Sold', color_continuous_scale='Tealgrn')
-                    st.plotly_chart(fig, use_container_width=True)
+                    chart = alt.Chart(top_cities).mark_bar().encode(
+                        x='Total Items Sold:Q',
+                        y=alt.Y('City:N', sort='-x'),
+                        color=alt.value('#4A998F')
+                    ).properties(width='container')
+                    st.altair_chart(chart, use_container_width=True)
+
                 else:
                     st.dataframe(top_cities, use_container_width=True, hide_index=True)
 
@@ -200,7 +210,11 @@ with col_bulanan:
             detail = filtered[filtered['customer_city'] == selected_city]['product_category_name'].value_counts().reset_index()
             detail.columns = ['Category', 'Items Sold']
             if st.toggle("Show Chart", key="chart_detail_products"):
-                fig = px.bar(detail, x='Items Sold', y='Category', orientation='h', color='Items Sold', color_continuous_scale='Tealgrn')
-                st.plotly_chart(fig, use_container_width=True)
+                chart = alt.Chart(detail).mark_bar().encode(
+                    x='Items Sold:Q',
+                    y=alt.Y('Category:N', sort='-x'),
+                    color=alt.value('#4A998F')
+                ).properties(width='container')
+                st.altair_chart(chart, use_container_width=True)
             else:
                 st.dataframe(detail, use_container_width=True, hide_index=True)
