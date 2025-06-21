@@ -97,6 +97,46 @@ with col_wilayah:
                     width=300
                 )
                 st.plotly_chart(fig, use_container_width=False)
+
+            with st.container(border=True):
+                if not state_data.empty and 'order_purchase_timestamp' in state_data.columns:
+                    # Pastikan kolom timestamp bertipe datetime
+                    state_data['order_purchase_timestamp'] = pd.to_datetime(state_data['order_purchase_timestamp'])
+            
+                    # Kategorikan waktu dalam hari
+                    def get_time_of_day(hour):
+                        if 5 <= hour < 12:
+                            return 'Pagi'
+                        elif 12 <= hour < 17:
+                            return 'Siang'
+                        elif 17 <= hour < 21:
+                            return 'Sore'
+                        else:
+                            return 'Malam'
+            
+                    state_data['waktu_beli'] = state_data['order_purchase_timestamp'].dt.hour.apply(get_time_of_day)
+                    pie_data = state_data['waktu_beli'].value_counts().reset_index()
+                    pie_data.columns = ['Waktu', 'Jumlah']
+            
+                    pie_chart = px.pie(
+                        pie_data,
+                        names='Waktu',
+                        values='Jumlah',
+                        color='Waktu',
+                        color_discrete_map={
+                            'Pagi': '#00cc96',
+                            'Siang': '#636efa',
+                            'Sore': '#ab63fa',
+                            'Malam': '#EF553B'
+                        },
+                        hole=0.4
+                    )
+                    pie_chart.update_layout(
+                        title_text="🕒 Distribusi Waktu Pembelian",
+                        template="plotly_dark",
+                        paper_bgcolor="black"
+                    )
+                    st.plotly_chart(pie_chart, use_container_width=True)
     
         with col_keterangan:
             with st.container(border=True):
