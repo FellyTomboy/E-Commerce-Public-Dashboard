@@ -117,7 +117,7 @@ with col_wilayah:
                     state_data['waktu_beli'] = state_data['order_purchase_timestamp'].dt.hour.apply(get_time_of_day)
                     pie_data = state_data['waktu_beli'].value_counts().reset_index()
                     pie_data.columns = ['Waktu', 'Jumlah']
-            
+                                
                     pie_chart = px.pie(
                         pie_data,
                         names='Waktu',
@@ -127,17 +127,18 @@ with col_wilayah:
                     )
                     
                     pie_chart.update_traces(
-                        textinfo='label+percent',  # Tampilkan label dan persentase di dalam chart
-                        textposition='inside',     # Letakkan label di dalam potongan pie
-                        hovertemplate='%{value} (%{percent})<extra></extra>'  # Hover hanya nilai dan persen
+                        textinfo='label+percent',
+                        textposition='inside',
+                        hovertemplate='%{value} (%{percent})<extra></extra>'
                     )
                     
                     pie_chart.update_layout(
-                        title_text="Waktu Beli",
-                        showlegend=False,           # Hilangkan legenda
+                        title_text=None,  # Hapus judul agar tidak makan ruang vertikal
+                        showlegend=False,
                         template="plotly_dark",
                         paper_bgcolor="black",
-                        margin=dict(t=30, b=0, l=0, r=0)  # Perkecil margin atas/bawah/kiri/kanan
+                        height=250,  # Atur tinggi grafik agar tidak terlalu besar
+                        margin=dict(t=10, b=10, l=10, r=10)  # Margin sangat tipis
                     )
                     
                     st.plotly_chart(pie_chart, use_container_width=True)
